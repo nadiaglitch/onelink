@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<article>
+  <h1>@{{ profile.handle }}</h1>
+  {% if profile.profile_image %}
+    <img src="{{ profile.profile_image.url }}" alt="{{ profile.display_name }} avatar" width="96" height="96">
+  {% endif %}
+  <p>{{ profile.display_name }}</p>
+  <p>{{ profile.bio }}</p>
+
+  <ul>
+    {% for link in profile.links.all %}
+      <li><a href="{{ link.url }}" rel="noopener noreferrer" target="_blank">{{ link.title }}</a></li>
+    {% empty %}
+      <li>No links yet.</li>
+    {% endfor %}
+  </ul>
+</article>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>My Links</h1>
+<p><a href="{% url 'link-create' %}">+ Add Link</a></p>
+
+<ol id="link-list">
+  {% for link in links %}
+    <li data-id="{{ link.id }}">
+      <strong>{{ link.title }}</strong> — <a href="{{ link.url }}" target="_blank">{{ link.url }}</a>
+      [<a href="{% url 'link-update' link.id %}">edit</a>]
+      [<a href="{% url 'link-delete' link.id %}">delete</a>]
+    </li>
+  {% empty %}
+    <li>You have no links yet.</li>
+  {% endfor %}
+</ol>
+
+<!-- Optional: very simple reorder via Fetch (replace with drag-drop UI later) -->
+<script>
+async function reorder(ids){
+  const res = await fetch("{% url 'link-reorder' %}", {
+    method: "POST",
+    headers: {"Content-Type":"application/json", "X-CSRFToken": "{{ csrf_token }}"},
+    body: JSON.stringify({ordered_ids: ids})
+  });
+  if(!res.ok){ alert("Reorder failed"); }
+}
+// Example usage: reorder([...document.querySelectorAll('#link-list li')].map(li => li.dataset.id))
+</script>
+{% endblock %}
