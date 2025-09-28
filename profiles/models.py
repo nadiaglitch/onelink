@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.contrib.auth.models import User
 from django.db.models.functions import Lower
 from django.core.validators import RegexValidator
@@ -37,7 +37,7 @@ class Link(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="links")
     title = models.CharField(max_length=100)
     url = models.URLField()
-    sort_order = models.PositiveIntegerField(default=0)
+    sort_order = models.PositiveIntegerField(blank=True, null=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
  
@@ -53,3 +53,16 @@ class Link(models.Model):
 
     def __str__(self):
         return f"{self.title} → {self.url}"
+
+    def save(self, *args, **kwargs):
+        # Auto-assign next sort_order (1, 2, 3, …) per profile
+        if self.sort_order is None and self.profile_id:
+            with transaction.atomic():
+                max_sort = (
+                    Link.objects
+                    .select_for_update()
+                    .filter(profile_id=self.profile_id)
+                    .aggregate(models.Max("sort_order"))["sort_order__max"]
+                )
+                self.sort_order = (max_sort or 0) + 1
+        super().save(*args, **kwargs)
