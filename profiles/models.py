@@ -4,6 +4,11 @@ from django.db.models.functions import Lower
 from django.core.validators import RegexValidator
 from django.urls import reverse
 
+username_validator = RegexValidator(
+    regex=r"^[a-z0-9_]{5,15}$",
+    message="Username must be 5–15 chars, lowercase letters, numbers, or underscore."
+)
+
 handle_validator = RegexValidator(
     regex=r"^[a-z0-9_]{5,15}$",
     message="Handle must be 5–15 chars, lowercase letters, numbers, or underscore."
