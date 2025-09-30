@@ -15,7 +15,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     handle = models.CharField(
         max_length=15, 
-        unique=True
+        unique=True,
         validators=[handle_validator],
         db_index=True)
     display_name = models.CharField(max_length=50)
