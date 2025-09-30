@@ -12,12 +12,18 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+import sys
 import dj_database_url
-if os.path.isfile('env.py'):
-    import env
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+env_py = BASE_DIR / "env.py"
+if env_py.exists():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("env", env_py)
+    env = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(env)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -78,6 +84,11 @@ WSGI_APPLICATION = 'onelink.wsgi.application'
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+STORAGES = {
+    "default": {"BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -90,8 +101,10 @@ MEDIA_ROOT = BASE_DIR / "media"
 # }
 
 DATABASES = {
-    'default': 
-dj_database_url.parse(os.environ.get("DATABASE_URL"))
+    "default": dj_database_url.parse(
+        os.environ.get("DATABASE_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+        conn_max_age=600,
+    )
 }
 
 CSRF_TRUSTED_ORIGINS = [
@@ -139,9 +152,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-#Cloudinary storage for media
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 #Cloudinary details
 CLOUDINARY_STORAGE = {

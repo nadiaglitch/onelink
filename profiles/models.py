@@ -47,6 +47,12 @@ class Profile(models.Model):
     def get_absolute_url(self):
         # e.g. /onelink/@nadia
         return reverse("profile-detail", kwargs={"handle": self.handle})
+    
+    def save(self, *args, **kwargs):
+        if self.handle:
+            self.handle = self.handle.lower()
+        super().save(*args, **kwargs)    
+    
 
 class Link(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="links")
@@ -70,17 +76,14 @@ class Link(models.Model):
         return f"{self.title} → {self.url}"
 
     def save(self, *args, **kwargs):
-        # Auto-assign next sort_order (1, 2, 3, …) per profile
-        # Ensure handle is always lowercase
-        if self.handle:
-            self.handle = self.handle.lower()
         if self.sort_order is None and self.profile_id:
+            from django.db import transaction, models as dj_models
             with transaction.atomic():
                 max_sort = (
                     Link.objects
                     .select_for_update()
                     .filter(profile_id=self.profile_id)
-                    .aggregate(models.Max("sort_order"))["sort_order__max"]
+                    .aggregate(dj_models.Max("sort_order"))["sort_order__max"]
                 )
                 self.sort_order = (max_sort or 0) + 1
         super().save(*args, **kwargs)
