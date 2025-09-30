@@ -13,7 +13,11 @@ handle_validator = RegexValidator(
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    handle = models.CharField(max_length=15, unique=True)
+    handle = models.CharField(
+        max_length=15, 
+        unique=True
+        validators=[handle_validator],
+        db_index=True)
     display_name = models.CharField(max_length=50)
     bio = models.TextField(blank=True)
     profile_image = models.ImageField(upload_to="profiles/", blank=True, null=True)
