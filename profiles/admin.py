@@ -1,12 +1,8 @@
 from django.contrib import admin
-from django_summernote.admin import SummernoteModelAdmin
 from .models import Profile, Link
 
 @admin.register(Profile)
-class ProfileAdmin(SummernoteModelAdmin):
-    # Enable Summernote editor on these TextFields:
-    summernote_fields = ("bio",)
-
+class ProfileAdmin(admin.ModelAdmin):
     list_display = ("handle", "user", "display_name", "created_at")
     search_fields = ("handle", "display_name", "user__username", "user__email")
     readonly_fields = ("created_at", "updated_at")

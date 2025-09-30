@@ -24,8 +24,6 @@ urlpatterns = [
     path("", index_views.index, name="index"),
     path("", include("profiles.urls")),
     path("admin/", admin.site.urls),
-    path("summernote/", include("django_summernote.urls")),
-
 ]
 
 if settings.DEBUG:
