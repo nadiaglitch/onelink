@@ -30,6 +30,12 @@ class Profile(models.Model):
             models.UniqueConstraint(Lower("handle"), name="uniq_profile_handle_ci")
         ]
 
+    def clean(self):
+        # Ensure handle is always lowercase
+        super().clean()
+        if self.handle:
+            self.handle = self.handle.lower()
+
     def __str__(self):
         return f"@{self.handle}"
 
@@ -60,6 +66,9 @@ class Link(models.Model):
 
     def save(self, *args, **kwargs):
         # Auto-assign next sort_order (1, 2, 3, …) per profile
+        # Ensure handle is always lowercase
+        if self.handle:
+            self.handle = self.handle.lower()
         if self.sort_order is None and self.profile_id:
             with transaction.atomic():
                 max_sort = (
