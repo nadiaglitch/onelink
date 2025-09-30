@@ -1,8 +1,13 @@
 # onelink/profiles/urls.py
 from django.urls import path
-from . import views
+from .import views
+from .views import LinkListView, ProfileDetailView, index
 
 urlpatterns = [
+    path("", index, name="index"),  # home
+    path("links/", LinkListView.as_view(), name="link-list"),
+    path("@<str:handle>/", ProfileDetailView.as_view(), name="profile-detail"),
+
     # public profile page: /@nadia
     path("@<str:handle>/", views.ProfileDetailView.as_view(), name="profile-detail"),
 

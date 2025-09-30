@@ -37,7 +37,15 @@ class LinkListView(LoginRequiredMixin, ListView):
     context_object_name = "links"
 
     def get_queryset(self):
-        return Link.objects.filter(profile=self.request.user.profile).order_by("sort_order")
+        # Auto-create profile if missing
+        profile, _ = Profile.objects.get_or_create(
+            user=self.request.user,
+            defaults={
+                "handle": f"user{self.request.user.id}",
+                "display_name": self.request.user.username or f"User {self.request.user.id}",
+            },
+        )
+        return profile.links.order_by("sort_order")
 
 # CREATE
 class LinkCreateView(LoginRequiredMixin, CreateView):
