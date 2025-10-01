@@ -2,7 +2,7 @@
 {% block content %}
 <article>
   <h1>@{{ profile.handle }}</h1>
-  {% if profile.profile_image %}
+  {% if profile.profile_image and profile.profile_image.name %}
     <img src="{{ profile.profile_image.url }}" alt="{{ profile.display_name }} avatar" width="96" height="96">
   {% endif %}
   <p>{{ profile.display_name }}</p>
