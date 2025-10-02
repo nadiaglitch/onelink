@@ -6,11 +6,18 @@ from django.views.generic import DetailView, ListView, CreateView, UpdateView, D
 from django.urls import reverse_lazy, reverse
 from django.views.decorators.http import require_POST
 from django.db import models, transaction
+from django.contrib.auth.forms import AuthenticationForm
 
 from .models import Profile, Link
 
 def index(request):
-    return HttpResponse("Hello, this is the profiles index page.")
+    # If logged in → go straight to links page
+    if request.user.is_authenticated:
+        return redirect("link-list")
+
+    # Otherwise show index with login form
+    form = AuthenticationForm(request)
+    return render(request, "index.html", {"form": form})
 
 # PUBLIC: /@handle
 class ProfileDetailView(DetailView):

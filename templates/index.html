@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<section class="links-page" aria-labelledby="welcome-title">
+  <h1 id="welcome-title">Welcome to OneLink</h1>
+
+  {% if user.is_authenticated %}
+    <p>Hello, {{ user.username }}!</p>
+    <a class="btn primary" href="{% url 'link-list' %}">Go to My Links</a>
+    <a class="btn danger" href="{% url 'logout' %}">Logout</a>
+  {% else %}
+    <h2>Login</h2>
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      {% if form.errors %}
+        <div class="alerts">
+          <div class="alert error">Invalid username or password</div>
+        </div>
+      {% endif %}
+
+      <div>
+        <label for="id_username">Username</label>
+        <input id="id_username" type="text" name="username" required>
+      </div>
+
+      <div>
+        <label for="id_password">Password</label>
+        <input id="id_password" type="password" name="password" required>
+      </div>
+
+      <button class="btn primary" type="submit">Sign in</button>
+    </form>
+  {% endif %}
+</section>
+
+{% endblock %}
