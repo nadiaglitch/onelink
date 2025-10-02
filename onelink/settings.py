@@ -162,5 +162,5 @@ CLOUDINARY_STORAGE = {
 }
 
 LOGIN_URL = "/accounts/login/"
-LOGIN_REDIRECT_URL = "/links/"
+LOGIN_REDIRECT_URL = "post-login-redirect"
 LOGOUT_REDIRECT_URL = "/"

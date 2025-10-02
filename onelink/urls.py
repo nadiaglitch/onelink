@@ -16,15 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from profiles import views
+from profiles.views import post_login_redirect
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path("", views.index, name="index"),
-    path("", include("profiles.urls")),
+    path("", include("profiles.urls")),                    # app routes (/, /@handle, /links, etc.)
+    path("accounts/", include("django.contrib.auth.urls")),# login/logout/password routes
+    path("after-login/", post_login_redirect, name="post-login-redirect"),  # login landing
     path("admin/", admin.site.urls),
-    path("accounts/", include("django.contrib.auth.urls")),
 ]
 
 if settings.DEBUG:

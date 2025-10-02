@@ -1,25 +1,54 @@
-# onelink/profiles/views.py
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy, reverse
 from django.views.decorators.http import require_POST
 from django.db import models, transaction
-from django.contrib.auth.forms import AuthenticationForm
 
 from .models import Profile, Link
 
-def index(request):
-    # If logged in → go straight to links page
-    if request.user.is_authenticated:
-        return redirect("link-list")
 
-    # Otherwise show index with login form
+def _ensure_profile_for(user):
+    """
+    Ensure the authenticated user has a Profile.
+    Returns (profile, created_bool).
+    """
+    return Profile.objects.get_or_create(
+        user=user,
+        defaults={
+            "handle": f"user{user.id}",
+            "display_name": user.username or f"User {user.id}",
+        },
+    )
+
+
+def index(request):
+    """
+    If logged in → send straight to the live public profile (/@handle).
+    Otherwise render the index with a login form.
+    """
+    if request.user.is_authenticated:
+        profile, _ = _ensure_profile_for(request.user)
+        return redirect(profile.get_absolute_url())
+
     form = AuthenticationForm(request)
     return render(request, "index.html", {"form": form})
 
-# PUBLIC: /@handle
+
+@login_required
+def post_login_redirect(request):
+    """
+    Target for LOGIN_REDIRECT_URL.
+    After successful login, always go to the user's live public profile.
+    """
+    profile, _ = _ensure_profile_for(request.user)
+    return redirect(profile.get_absolute_url())
+
+
+# PUBLIC: /@<handle>
 class ProfileDetailView(DetailView):
     model = Profile
     template_name = "profiles/profile_detail.html"
@@ -27,6 +56,7 @@ class ProfileDetailView(DetailView):
 
     def get_object(self):
         return get_object_or_404(Profile, handle=self.kwargs["handle"])
+
 
 # OWNER-ONLY guard
 class OwnerRequiredMixin(UserPassesTestMixin):
@@ -37,6 +67,7 @@ class OwnerRequiredMixin(UserPassesTestMixin):
         # for list/create, check against the user profile
         return self.request.user.is_authenticated
 
+
 # LIST (owner’s links)
 class LinkListView(LoginRequiredMixin, ListView):
     model = Link
@@ -44,15 +75,10 @@ class LinkListView(LoginRequiredMixin, ListView):
     context_object_name = "links"
 
     def get_queryset(self):
-        # Auto-create profile if missing
-        profile, _ = Profile.objects.get_or_create(
-            user=self.request.user,
-            defaults={
-                "handle": f"user{self.request.user.id}",
-                "display_name": self.request.user.username or f"User {self.request.user.id}",
-            },
-        )
+        # Ensure the user has a profile, then return their links in sort order
+        profile, _ = _ensure_profile_for(self.request.user)
         return profile.links.order_by("sort_order")
+
 
 # CREATE
 class LinkCreateView(LoginRequiredMixin, CreateView):
@@ -66,6 +92,7 @@ class LinkCreateView(LoginRequiredMixin, CreateView):
         # sort_order left as None → auto-numbering in model.save()
         return super().form_valid(form)
 
+
 # UPDATE
 class LinkUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
     model = Link
@@ -78,6 +105,7 @@ class LinkUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
         self.object = obj
         return obj
 
+
 # DELETE
 class LinkDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
     model = Link
@@ -88,6 +116,7 @@ class LinkDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
         obj = super().get_object(queryset)
         self.object = obj
         return obj
+
 
 # REORDER (POST with JSON: {"ordered_ids":[3,1,2,...]})
 @require_POST
