@@ -67,7 +67,9 @@
   {% endif %}
 
   <footer class="page-footer">
-    <a class="btn outline" href="{% url 'index' %}">View my public profile</a>
+    <a class="btn outline" href="{% url 'profile-detail' request.user.profile.handle %}">
+      View my public profile
+    </a>
   </footer>
 </section>
 
