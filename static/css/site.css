@@ -189,15 +189,15 @@ html { scroll-behavior: smooth; }
 .btn.subtle { color:var(--muted); }
 
 /* Form */
-form input {
+form input[type="text"], form input[type="url"], form input[type="number"], form textarea, form input[type="file"] {
+  width: 100%;
   padding: .55rem .75rem;
   border-radius: .75rem;
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--text);
-  width: 100%;
-  margin-bottom: .75rem;
 }
+
 
 /* Keyboard hints */
 .kbd {

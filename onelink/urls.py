@@ -16,14 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from profiles.views import post_login_redirect
+from profiles.views import ProfileLoginView
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path("", include("profiles.urls")),                    # app routes (/, /@handle, /links, etc.)
-    path("accounts/", include("django.contrib.auth.urls")),# login/logout/password routes
-    path("after-login/", post_login_redirect, name="post-login-redirect"),  # login landing
+    path("", include("profiles.urls")),
+    path("accounts/login/", ProfileLoginView.as_view(), name="login"),  # <-- use custom LoginView
+    path("accounts/", include("django.contrib.auth.urls")),             # keep logout/reset/etc.
     path("admin/", admin.site.urls),
 ]
 

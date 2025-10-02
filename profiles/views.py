@@ -1,14 +1,18 @@
+# onelink/profiles/views.py
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.views import LoginView
+from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
-from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView
+from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView, View
 from django.urls import reverse_lazy, reverse
 from django.views.decorators.http import require_POST
 from django.db import models, transaction
 
 from .models import Profile, Link
+from .forms import ProfileForm, LinkFormSet  # <-- NEW
 
 
 def _ensure_profile_for(user):
@@ -25,6 +29,14 @@ def _ensure_profile_for(user):
     )
 
 
+class ProfileLoginView(LoginView):
+    """Custom login that always redirects to the user's live public profile."""
+    def get_success_url(self):
+        user = self.request.user
+        profile, _ = _ensure_profile_for(user)
+        return profile.get_absolute_url()
+
+
 def index(request):
     """
     If logged in → send straight to the live public profile (/@handle).
@@ -36,16 +48,6 @@ def index(request):
 
     form = AuthenticationForm(request)
     return render(request, "index.html", {"form": form})
-
-
-@login_required
-def post_login_redirect(request):
-    """
-    Target for LOGIN_REDIRECT_URL.
-    After successful login, always go to the user's live public profile.
-    """
-    profile, _ = _ensure_profile_for(request.user)
-    return redirect(profile.get_absolute_url())
 
 
 # PUBLIC: /@<handle>
@@ -68,50 +70,80 @@ class OwnerRequiredMixin(UserPassesTestMixin):
         return self.request.user.is_authenticated
 
 
-# LIST (owner’s links)
+# NEW: Unified Profile + Links editor at /links
+class ProfileLinksEditorView(LoginRequiredMixin, View):
+    template_name = "profiles/profile_links.html"
+
+    def get(self, request):
+        profile, _ = _ensure_profile_for(request.user)
+        pform = ProfileForm(instance=profile)
+        formset = LinkFormSet(instance=profile, queryset=profile.links.order_by("sort_order"))
+        return render(request, self.template_name, {"pform": pform, "formset": formset, "profile": profile})
+
+    def post(self, request):
+        profile, _ = _ensure_profile_for(request.user)
+        pform = ProfileForm(request.POST, request.FILES, instance=profile)
+        formset = LinkFormSet(request.POST, instance=profile, queryset=profile.links.order_by("sort_order"))
+        if not (pform.is_valid() and formset.is_valid()):
+            messages.error(request, "Please fix the errors below.")
+            return render(request, self.template_name, {"pform": pform, "formset": formset, "profile": profile})
+
+        with transaction.atomic():
+            pform.save()
+
+            # Delete marked links first
+            for obj in formset.deleted_objects:
+                obj.delete()
+
+            # Save remaining links; apply ORDER (if provided) to sort_order
+            cleaned = [f for f in formset.forms if f.cleaned_data and not f.cleaned_data.get("DELETE")]
+            ordered_forms = sorted(cleaned, key=lambda f: f.cleaned_data.get("ORDER", 0))
+            for idx, f in enumerate(ordered_forms, start=1):
+                link = f.save(commit=False)
+                link.profile = profile
+                link.sort_order = idx
+                link.save()
+
+        messages.success(request, "Profile & links updated.")
+        return redirect("link-list")  # stay on the same editor page
+
+
+# (Optional legacy CRUD: you can keep/remove as you wish)
+
 class LinkListView(LoginRequiredMixin, ListView):
     model = Link
     template_name = "profiles/link_list.html"
     context_object_name = "links"
-
     def get_queryset(self):
-        # Ensure the user has a profile, then return their links in sort order
         profile, _ = _ensure_profile_for(self.request.user)
         return profile.links.order_by("sort_order")
 
 
-# CREATE
 class LinkCreateView(LoginRequiredMixin, CreateView):
     model = Link
-    fields = ["title", "url"]  # sort_order auto via model.save()
+    fields = ["title", "url"]
     template_name = "profiles/link_form.html"
     success_url = reverse_lazy("link-list")
-
     def form_valid(self, form):
         form.instance.profile = self.request.user.profile
-        # sort_order left as None → auto-numbering in model.save()
         return super().form_valid(form)
 
 
-# UPDATE
 class LinkUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
     model = Link
     fields = ["title", "url"]
     template_name = "profiles/link_form.html"
     success_url = reverse_lazy("link-list")
-
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
         self.object = obj
         return obj
 
 
-# DELETE
 class LinkDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
     model = Link
     template_name = "profiles/link_confirm_delete.html"
     success_url = reverse_lazy("link-list")
-
     def get_object(self, queryset=None):
         obj = super().get_object(queryset)
         self.object = obj
@@ -141,7 +173,6 @@ def link_reorder(request):
     if qs.count() != len(ordered_ids):
         return HttpResponseBadRequest("IDs mismatch or unauthorized")
 
-    # stable 1..n ordering without clashes
     with transaction.atomic():
         for idx, link_id in enumerate(ordered_ids, start=1):
             Link.objects.filter(id=link_id).update(sort_order=idx)

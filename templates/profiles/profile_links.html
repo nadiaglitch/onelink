@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<section class="links-page" aria-labelledby="editor-title">
+  <h1 id="editor-title">Profile & Links</h1>
+
+  {% if messages %}
+    <div class="alerts">
+      {% for message in messages %}
+        <div class="alert {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <fieldset style="margin-bottom:1rem;">
+      <legend>Profile</legend>
+      {{ pform.non_field_errors }}
+      <div>{{ pform.display_name.label_tag }} {{ pform.display_name }}</div>
+      <div>{{ pform.handle.label_tag }} {{ pform.handle }}</div>
+      <div>{{ pform.bio.label_tag }} {{ pform.bio }}</div>
+      <div>{{ pform.profile_image.label_tag }} {{ pform.profile_image }}</div>
+      {% for h in pform.hidden_fields %}{{ h }}{% endfor %}
+    </fieldset>
+
+    <fieldset>
+      <legend>Links</legend>
+      {{ formset.management_form }}
+      {% for form in formset.forms %}
+        <div style="padding:.75rem; border:1px solid var(--border); border-radius:.5rem; margin-bottom:.5rem;">
+          {{ form.non_field_errors }}
+          <div>{{ form.title.label_tag }} {{ form.title }}</div>
+          <div>{{ form.url.label_tag }} {{ form.url }}</div>
+          <div>{{ form.sort_order.label_tag }} {{ form.sort_order }}</div>
+          {% if form.can_order %}{{ form.ORDER }}{% endif %}
+          {% if form.can_delete %}{{ form.DELETE }} Delete{% endif %}
+          {% for h in form.hidden_fields %}{{ h }}{% endfor %}
+        </div>
+      {% endfor %}
+    </fieldset>
+
+    <div style="margin-top:1rem; display:flex; gap:.5rem; justify-content:flex-end;">
+      <a class="btn" href="{{ profile.get_absolute_url }}">View public profile</a>
+      <button class="btn primary" type="submit">Save changes</button>
+    </div>
+  </form>
+</section>
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
