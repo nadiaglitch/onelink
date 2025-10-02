@@ -1,0 +1,18 @@
+/* profile.css - extracted from critical inline + extras */
+:root {
+  --bg: #0d0d0d;
+  --card: #1a1a1a;
+  --text: #ffffff;
+  --muted: #c7c7c7;
+  --accent: #34d399;
+  --btn: #2a2a2a;
+  --btn-hover: #3a3a3a;
+  --focus: #f59e0b;
+}
+@media (prefers-color-scheme: light) {
+  :root { --bg: #f8fafc; --card:#ffffff; --text:#0b0f19; --muted:#475569; --btn:#f1f5f9; --btn-hover:#e2e8f0; }
+}
+/* Additional refinements that are not critical */
+.link-btn { transition: transform .12s ease, box-shadow .12s ease; }
+.link-btn:hover { box-shadow: 0 10px 20px rgba(0,0,0,.25); }
+.link-item.empty { text-align:center; color: var(--muted); }

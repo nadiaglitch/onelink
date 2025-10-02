@@ -1,19 +1,121 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<article>
-  <h1>@{{ profile.handle }}</h1>
-  {% if profile.profile_image and profile.profile_image.name %}
-    <img src="{{ profile.profile_image.url }}" alt="{{ profile.display_name }} avatar" width="96" height="96">
-  {% endif %}
-  <p>{{ profile.display_name }}</p>
-  <p>{{ profile.bio }}</p>
+<a class="skip-link" href="#links">Skip to links</a>
 
-  <ul>
-    {% for link in profile.links.all %}
-      <li><a href="{{ link.url }}" rel="noopener noreferrer" target="_blank">{{ link.title }}</a></li>
-    {% empty %}
-      <li>No links yet.</li>
-    {% endfor %}
-  </ul>
+<article class="profile" itemscope itemtype="https://schema.org/Person" aria-labelledby="profile-title">
+  <header class="profile-header">
+    <div class="avatar-wrap">
+      {% if profile.profile_image and profile.profile_image.name %}
+        <img class="avatar" src="{{ profile.profile_image.url }}" alt="{{ profile.display_name }} avatar" width="160" height="160" loading="lazy" decoding="async">
+      {% else %}
+        <div class="avatar placeholder" aria-hidden="true">{{ profile.display_name|first|upper }}</div>
+      {% endif %}
+    </div>
+
+    <h1 id="profile-title" class="display-name" itemprop="name">{{ profile.display_name }}</h1>
+    <p class="handle" aria-label="Handle">@{{ profile.handle }}</p>
+    {% if profile.bio %}
+      <p class="bio" itemprop="description">{{ profile.bio }}</p>
+    {% endif %}
+
+    <div class="actions">
+      <button class="copy-btn" type="button" aria-label="Copy profile link" data-action="copy-link">
+        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false" class="icon"><path d="M3 3h13a2 2 0 0 1 2 2v3h-2V5H5v14h3v2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm8 6h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2V11a2 2 0 0 1 2-2Zm0 2v10h8V11h-8Z"/></svg>
+        Copy link
+      </button>
+      <a class="share-btn" href="mailto:?subject=Check%20out%20{{ profile.display_name|urlencode }}%27s%20OneLink&body={{ request.build_absolute_uri|urlencode }}" aria-label="Share via email">
+        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false" class="icon"><path d="M20 4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h16Zm0 2H4v.511l8 5.333 8-5.333V6Zm0 2.822-8 5.333-8-5.333V18h16V8.822Z"/></svg>
+        Share
+      </a>
+    </div>
+  </header>
+
+  <nav class="links" aria-label="Profile Links">
+    <ul id="links" class="link-list">
+      {% for link in profile.links.all %}
+        <li class="link-item">
+          <a class="link-btn"
+             href="{{ link.url }}"
+             target="_blank"
+             rel="noopener noreferrer"
+             role="button"
+             {% if link.title %}aria-label="{{ link.title }} (opens in new tab)"{% endif %}>
+            <span class="link-title">{{ link.title|default:link.url }}</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false" class="icon external"><path d="M14 3h7v7h-2V6.414l-9.293 9.293-1.414-1.414L17.586 5H14V3ZM5 5h6v2H7v10h10v-4h2v6H5V5Z"/></svg>
+          </a>
+        </li>
+      {% empty %}
+        <li class="link-item empty" aria-live="polite">No links yet.</li>
+      {% endfor %}
+    </ul>
+  </nav>
+
+  <footer class="profile-footer">
+    <a href="{% url 'index' %}" class="brand" aria-label="Back to OneLink home">Made with OneLink</a>
+  </footer>
 </article>
+
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<style>
+/* Critical inline styles for immediate render; full styles in css/profile.css */
+:root {
+  --bg: #0d0d0d;
+  --card: #1a1a1a;
+  --text: #ffffff;
+  --muted: #c7c7c7;
+  --accent: #34d399;
+  --btn: #2a2a2a;
+  --btn-hover: #3a3a3a;
+  --focus: #f59e0b;
+}
+@media (prefers-color-scheme: light) {
+  :root { --bg: #f8fafc; --card:#ffffff; --text:#0b0f19; --muted:#475569; --btn:#f1f5f9; --btn-hover:#e2e8f0; }
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); }
+.skip-link { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+.skip-link:focus { position:static; width:auto; height:auto; padding:.5rem 1rem; background:#000; color:#fff; }
+.profile { max-width: 640px; margin: 2rem auto; padding: 1rem; display:grid; gap:1.5rem; }
+.profile-header { text-align:center; display:grid; gap: .5rem; }
+.avatar-wrap { display:flex; justify-content:center; }
+.avatar { border-radius: 9999px; border: 4px solid var(--card); box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.avatar.placeholder { width:160px; height:160px; border-radius:9999px; display:grid; place-items:center; font-size:4rem; font-weight:700; background: var(--btn); color: var(--muted); }
+.display-name { font-size: clamp(1.4rem, 2.5vw, 2rem); margin:0.25rem 0 0; }
+.handle { color: var(--muted); margin:0; }
+.bio { margin:.5rem auto 0; color: var(--muted); max-width: 50ch; }
+.actions { display:flex; gap:.75rem; justify-content:center; margin-top:.5rem; flex-wrap:wrap; }
+.copy-btn, .share-btn { display:inline-flex; align-items:center; gap:.5rem; padding:.6rem .9rem; border-radius:9999px; background:var(--btn); color:var(--text); border:1px solid transparent; font: inherit; text-decoration:none; }
+.copy-btn:hover, .share-btn:hover { background: var(--btn-hover); }
+.copy-btn:focus-visible, .share-btn:focus-visible, .link-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.links { margin-top: .25rem; }
+.link-list { list-style:none; padding:0; margin:0; display:grid; gap:.9rem; }
+.link-btn { display:flex; justify-content:space-between; align-items:center; width:100%; text-decoration:none; padding:1rem 1.1rem; border-radius:1rem; background: var(--card); border:1px solid rgba(255,255,255,.08); box-shadow: 0 8px 16px rgba(0,0,0,.15); }
+.link-btn:hover { transform: translateY(-1px); }
+.link-title { font-weight:600; }
+.icon { width:1.1rem; height:1.1rem; flex:0 0 auto; }
+.external { opacity:.8; }
+.profile-footer { text-align:center; margin-top: .5rem; }
+.brand { color: var(--muted); text-decoration:none; }
+.brand:hover { text-decoration: underline; }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+
+<script>
+// Copy current URL
+document.addEventListener('DOMContentLoaded', function() {
+  const btn = document.querySelector('[data-action="copy-link"]');
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        btn.textContent = 'Copied!';
+        setTimeout(() => (btn.textContent = 'Copy link'), 1800);
+      } catch(e) { console.error(e); }
+    });
+  }
+});
+</script>
 {% endblock %}
