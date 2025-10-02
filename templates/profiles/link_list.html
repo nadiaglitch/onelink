@@ -1,30 +1,176 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h1>My Links</h1>
-<p><a href="{% url 'link-create' %}">+ Add Link</a></p>
+<a class="skip-link" href="#links">Skip to link list</a>
 
-<ol id="link-list">
-  {% for link in links %}
-    <li data-id="{{ link.id }}">
-      <strong>{{ link.title }}</strong> — <a href="{{ link.url }}" target="_blank">{{ link.url }}</a>
-      [<a href="{% url 'link-update' link.id %}">edit</a>]
-      [<a href="{% url 'link-delete' link.id %}">delete</a>]
-    </li>
-  {% empty %}
-    <li>You have no links yet.</li>
-  {% endfor %}
-</ol>
+<section class="links-page" aria-labelledby="page-title">
+  <header class="page-header">
+    <h1 id="page-title">My Links</h1>
+    <p class="subtitle">Create, edit, delete, and reorder your public links.</p>
+    <div class="toolbar">
+      <a class="btn primary" href="{% url 'link-create' %}" role="button" aria-label="Add a new link">+ Add Link</a>
+      <form class="search" action="" method="get" role="search">
+        <label for="q" class="visually-hidden">Search links</label>
+        <input id="q" name="q" type="search" placeholder="Search your links…" value="{{ request.GET.q|default:'' }}"/>
+        <button class="btn" type="submit">Search</button>
+      </form>
+    </div>
+  </header>
 
-<!-- Optional: very simple reorder via Fetch (replace with drag-drop UI later) -->
+  {% if messages %}
+  <div class="alerts" role="region" aria-live="polite">
+    {% for message in messages %}
+      <div class="alert {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <nav class="help" aria-label="Shortcuts">
+    <ul>
+      <li><span class="kbd">Enter</span> to edit focused item</li>
+      <li><span class="kbd">Del</span> to delete</li>
+      <li><span class="kbd">Ctrl</span> + <span class="kbd">↑/↓</span> to reorder</li>
+      <li>Drag handle for mouse/touch drag</li>
+    </ul>
+  </nav>
+
+  <div id="status" class="sr-only" aria-live="polite"></div>
+
+  <ol id="links" class="link-list" aria-label="Your links">
+    {% for link in links %}
+      <li class="row" data-id="{{ link.id }}" tabindex="0" aria-roledescription="Draggable link">
+        <div class="cell drag-handle" title="Drag to reorder" aria-hidden="true">⋮⋮</div>
+        <div class="cell main">
+          <div class="title"><strong>{{ link.title|default:link.url }}</strong></div>
+          <a class="url" href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.url }}</a>
+        </div>
+        <div class="cell actions">
+          <a class="btn subtle" href="{% url 'link-update' link.id %}" aria-label="Edit {{ link.title|default:'link' }}">Edit</a>
+          <a class="btn danger" href="{% url 'link-delete' link.id %}" aria-label="Delete {{ link.title|default:'link' }}">Delete</a>
+        </div>
+      </li>
+    {% empty %}
+      <li class="empty">You have no links yet.</li>
+    {% endfor %}
+  </ol>
+
+  {% if is_paginated %}
+  <nav class="pagination" aria-label="Pagination">
+    {% if page_obj.has_previous %}
+      <a class="btn" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" rel="prev">Prev</a>
+    {% endif %}
+    <span class="page-count">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a class="btn" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" rel="next">Next</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+  <footer class="page-footer">
+    <a class="btn outline" href="{% url 'index' %}">View my public profile</a>
+  </footer>
+</section>
+
+<!-- Unified CSS -->
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+
 <script>
-async function reorder(ids){
-  const res = await fetch("{% url 'link-reorder' %}", {
-    method: "POST",
-    headers: {"Content-Type":"application/json", "X-CSRFToken": "{{ csrf_token }}"},
-    body: JSON.stringify({ordered_ids: ids})
+// Progressive enhancement: keyboard + drag reorder with CSRF
+(function(){
+  const list = document.getElementById('links');
+  if(!list) return;
+
+  const statusEl = document.getElementById('status');
+  const csrftoken = (document.cookie.match(/csrftoken=([^;]+)/)||[])[1] || "{{ csrf_token }}";
+
+  function announce(t){ if(statusEl){ statusEl.textContent = t; } }
+
+  async function saveOrder(){
+    const ids = [...list.querySelectorAll('.row')].map(li => li.dataset.id);
+    try{
+      const res = await fetch("{% url 'link-reorder' %}", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "X-CSRFToken": csrftoken},
+        body: JSON.stringify({ordered_ids: ids})
+      });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      announce("Order saved");
+    }catch(e){
+      announce("Reorder failed");
+      console.error(e);
+    }
+  }
+
+  // Drag and drop (mouse/touch)
+  let dragSrc = null;
+  list.addEventListener('dragstart', e => {
+    const li = e.target.closest('.row');
+    if(!li) return;
+    dragSrc = li;
+    e.dataTransfer.effectAllowed = 'move';
+    li.classList.add('dragging');
   });
-  if(!res.ok){ alert("Reorder failed"); }
-}
-// Example usage: reorder([...document.querySelectorAll('#link-list li')].map(li => li.dataset.id))
+
+  list.addEventListener('dragend', e => {
+    const li = e.target.closest('.row');
+    if(li) li.classList.remove('dragging');
+    dragSrc = null;
+    saveOrder();
+  });
+
+  list.addEventListener('dragover', e => {
+    e.preventDefault();
+    const after = getDragAfterElement(list, e.clientY);
+    if(after == null){
+      list.appendChild(dragSrc);
+    }else{
+      list.insertBefore(dragSrc, after);
+    }
+  });
+
+  function getDragAfterElement(container, y){
+    const els = [...container.querySelectorAll('.row:not(.dragging)')];
+    return els.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  // Make rows draggable
+  list.querySelectorAll('.row').forEach(li => { li.draggable = true; });
+
+  // Keyboard reorder + shortcuts
+  list.addEventListener('keydown', e => {
+    const row = e.target.closest('.row');
+    if(!row) return;
+    if(e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')){
+      e.preventDefault();
+      if(e.key === 'ArrowUp' && row.previousElementSibling){
+        row.parentNode.insertBefore(row, row.previousElementSibling);
+        row.focus();
+        announce("Moved up");
+      }
+      if(e.key === 'ArrowDown' && row.nextElementSibling){
+        row.parentNode.insertBefore(row.nextElementSibling, row);
+        row.focus();
+        announce("Moved down");
+      }
+      saveOrder();
+    }
+    if(e.key === 'Enter'){
+      const edit = row.querySelector('.actions a');
+      if(edit){ window.location = edit.href; }
+    }
+    if(e.key === 'Delete'){
+      const del = row.querySelector('.actions .danger');
+      if(del){ window.location = del.href; }
+    }
+  });
+})();
 </script>
 {% endblock %}
