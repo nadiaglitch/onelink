@@ -49,6 +49,38 @@ html { scroll-behavior: smooth; }
   color: #fff;
 }
 
+/* === Header Layout === */
+.site-header {
+  display: flex;
+  justify-content: space-between;  /* logo left, links right */
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo-area img.logo {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 500;
+  transition: opacity .2s ease;
+}
+
+.nav-links a:hover {
+  opacity: 0.7;
+}
+
 /* =========================================
    Profile Page (profile_detail.html)
    ========================================= */
