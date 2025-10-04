@@ -1,31 +1,63 @@
+{% load static %}
+
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <title>OneLink</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  {% load static %}
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
 </head>
 <body>
+  <header class="site-header" role="banner">
+    <div class="container header-inner">
+      <!-- Logo (left) -->
+      <a class="logo-area" href="{% url 'index' %}" aria-label="Home">
+        <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
+      </a>
 
-<header class="site-header">
-  <div class="logo-area">
-    <a href="{% url 'index' %}">
-      <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
-    </a>
-  </div>
+      <!-- Mobile menu button -->
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
 
-  <nav class="nav-links">
-    {% if request.user.is_authenticated %}
-      <a href="{% url 'link-list' %}">Edit</a>
-      <a href="{% url 'logout' %}">Logout</a>
-    {% endif %}
-  </nav>
-</header>
-
+      <!-- Nav (right) -->
+      <nav id="site-nav" class="nav-links" role="navigation">
+        <ul>
+          {% if request.user.is_authenticated %}
+            <li><a href="{% url 'link-list' %}">Edit</a></li>
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+          {% else %}
+            <li><a href="{% url 'login' %}">Login</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  </header>
   <main role="main">
     {% block content %}{% endblock %}
   </main>
+  <script>
+  (function(){
+    const btn = document.querySelector('.nav-toggle');
+    const nav = document.getElementById('site-nav');
+    if(!btn || !nav) return;
+
+    btn.addEventListener('click', () => {
+      const isOpen = nav.classList.toggle('open');
+      btn.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape' && nav.classList.contains('open')){
+        nav.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.focus();
+      }
+    });
+  })();
+  </script>
+
 </body>
 </html>
