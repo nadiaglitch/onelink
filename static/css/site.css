@@ -64,7 +64,7 @@ html { scroll-behavior: smooth; }
 
 /* Logo left */
 .logo-area { display: inline-flex; align-items: center; gap: .5rem; text-decoration: none; }
-.logo-area .logo { height: 40px; width: auto; display: block; }
+.logo { height: 40px; width: auto; display: block; }
 
 /* Nav right */
 .nav-links ul {
