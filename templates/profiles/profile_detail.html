@@ -6,10 +6,11 @@
 <article class="profile" itemscope itemtype="https://schema.org/Person" aria-labelledby="profile-title">
   <header class="profile-header">
     <div class="avatar-wrap">
-      {% if profile.profile_image and profile.profile_image.name %}
-        <img class="avatar" src="{{ profile.profile_image.url }}" alt="{{ profile.display_name }} avatar" width="160" height="160" loading="lazy" decoding="async">
+      {% load static %}
+      {% if profile.profile_image %}
+        <img class="avatar" src="{{ profile.profile_image.url }}" alt="{{ profile.display_name }}">
       {% else %}
-        <div class="avatar placeholder" aria-hidden="true">{{ profile.display_name|first|upper }}</div>
+        <img class="avatar" src="{% static 'images/logo.png' %}" alt="Default logo">
       {% endif %}
     </div>
 
