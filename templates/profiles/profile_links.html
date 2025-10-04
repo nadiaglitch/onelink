@@ -1,50 +1,253 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-<section class="links-page" aria-labelledby="editor-title">
-  <h1 id="editor-title">Profile & Links</h1>
+<a class="skip-link" href="#links">Skip to forms</a>
+
+<section class="links-page pretty" aria-labelledby="editor-title">
+  <header class="page-header editor-header">
+    <div class="editor-identity">
+      <div class="avatar-wrap sm">
+        {% if profile.profile_image %}
+          <img class="avatar" src="{{ profile.profile_image.url }}" alt="{{ profile.display_name }} avatar" width="64" height="64" loading="lazy">
+        {% else %}
+          <div class="avatar placeholder" aria-hidden="true">{{ profile.display_name|first|upper }}</div>
+        {% endif %}
+      </div>
+      <div class="who">
+        <h1 id="editor-title">{{ profile.display_name|default:"Your profile" }}</h1>
+        <p class="muted">@{{ profile.handle }}</p>
+      </div>
+    </div>
+
+    <div class="editor-actions">
+      <a class="btn" href="{{ profile.get_absolute_url }}" target="_blank" rel="noopener">View public profile</a>
+      <button class="btn subtle" type="button" id="copy-profile-url" data-url="{{ request.build_absolute_uri|slice:':-len:request.get_full_path' }}{{ profile.get_absolute_url }}">Copy URL</button>
+    </div>
+  </header>
 
   {% if messages %}
-    <div class="alerts">
+    <div class="alerts" role="region" aria-live="polite">
       {% for message in messages %}
         <div class="alert {{ message.tags }}">{{ message }}</div>
       {% endfor %}
     </div>
   {% endif %}
 
-  <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" novalidate>
     {% csrf_token %}
-    <fieldset style="margin-bottom:1rem;">
-      <legend>Profile</legend>
-      {{ pform.non_field_errors }}
-      <div>{{ pform.display_name.label_tag }} {{ pform.display_name }}</div>
-      <div>{{ pform.handle.label_tag }} {{ pform.handle }}</div>
-      <div>{{ pform.bio.label_tag }} {{ pform.bio }}</div>
-      <div>{{ pform.profile_image.label_tag }} {{ pform.profile_image }}</div>
-      {% for h in pform.hidden_fields %}{{ h }}{% endfor %}
-    </fieldset>
 
-    <fieldset>
-      <legend>Links</legend>
-      {{ formset.management_form }}
-      {% for form in formset.forms %}
-        <div style="padding:.75rem; border:1px solid var(--border); border-radius:.5rem; margin-bottom:.5rem;">
-          {{ form.non_field_errors }}
-          <div>{{ form.title.label_tag }} {{ form.title }}</div>
-          <div>{{ form.url.label_tag }} {{ form.url }}</div>
-          <div>{{ form.sort_order.label_tag }} {{ form.sort_order }}</div>
-          {% if form.can_order %}{{ form.ORDER }}{% endif %}
-          {% if form.can_delete %}{{ form.DELETE }} Delete{% endif %}
-          {% for h in form.hidden_fields %}{{ h }}{% endfor %}
+    <div class="editor-grid">
+      <!-- Profile card -->
+      <section class="card" aria-labelledby="profile-form-title">
+        <div class="card-head">
+          <h2 id="profile-form-title">Profile</h2>
+          <span class="muted">Update your public details</span>
         </div>
-      {% endfor %}
-    </fieldset>
 
-    <div style="margin-top:1rem; display:flex; gap:.5rem; justify-content:flex-end;">
-      <a class="btn" href="{{ profile.get_absolute_url }}">View public profile</a>
+        <div class="form-row">
+          <label for="{{ pform.display_name.id_for_label }}">Display name</label>
+          {{ pform.display_name }}
+          {{ pform.display_name.errors }}
+        </div>
+
+        <div class="form-row">
+          <label for="{{ pform.handle.id_for_label }}">Handle</label>
+          <div class="input-with-prefix">
+            <span class="prefix">@</span>
+            {{ pform.handle }}
+          </div>
+          <small class="muted">Your public URL will be <code>/@{{ pform.handle.value|default:profile.handle }}</code></small>
+          {{ pform.handle.errors }}
+        </div>
+
+        <div class="form-row">
+          <label for="{{ pform.bio.id_for_label }}">Bio</label>
+          {{ pform.bio }}
+          {{ pform.bio.errors }}
+        </div>
+
+        <div class="form-row">
+          <label for="{{ pform.profile_image.id_for_label }}">Avatar</label>
+          {{ pform.profile_image }}
+          {% if profile.profile_image %}
+            <div class="avatar-preview">
+              <img src="{{ profile.profile_image.url }}" alt="Current avatar" width="96" height="96" class="avatar">
+            </div>
+          {% endif %}
+          {{ pform.profile_image.errors }}
+        </div>
+
+        {% for h in pform.hidden_fields %}{{ h }}{% endfor %}
+      </section>
+
+      <!-- Links card -->
+      <section class="card" aria-labelledby="links-form-title">
+        <div class="card-head">
+          <h2 id="links-form-title">Links</h2>
+          <span class="muted">Add, edit, delete & reorder</span>
+        </div>
+
+        {{ formset.management_form }}
+
+        <ol id="links" class="link-list editable" aria-label="Your links">
+          {% for form in formset.forms %}
+            <li class="row" data-index="{{ forloop.counter0 }}" tabindex="0">
+              <div class="cell drag-handle" title="Drag to reorder" aria-hidden="true">⋮⋮</div>
+
+              <div class="cell main">
+                <div class="form-row">
+                  <label>Title</label>
+                  {{ form.title }}
+                  {{ form.title.errors }}
+                </div>
+                <div class="form-row">
+                  <label>URL</label>
+                  {{ form.url }}
+                  {{ form.url.errors }}
+                </div>
+                {{ form.sort_order }}
+              </div>
+
+              <div class="cell actions">
+                {% if form.can_order %}
+                  <input type="hidden" name="{{ form.ORDER.html_name }}" value="{{ form.ORDER.value|default:forloop.counter0 }}">
+                {% endif %}
+                {% if form.can_delete %}
+                  <label class="delete-checkbox">
+                    {{ form.DELETE }} <span>Delete</span>
+                  </label>
+                {% endif %}
+              </div>
+
+              {% for h in form.hidden_fields %}{{ h }}{% endfor %}
+              {% if form.non_field_errors %}<div class="alert error">{{ form.non_field_errors }}</div>{% endif %}
+            </li>
+          {% empty %}
+            <li class="empty">No links yet — click “Add link”.</li>
+          {% endfor %}
+        </ol>
+
+        <div class="card-foot">
+          <button class="btn" type="button" id="add-row">+ Add link</button>
+        </div>
+      </section>
+
+      <!-- Live preview -->
+      <aside class="card preview" aria-labelledby="preview-title">
+        <div class="card-head">
+          <h2 id="preview-title">Preview</h2>
+          <span class="muted">How your page looks</span>
+        </div>
+        <div class="profile-preview">
+          <div class="avatar-wrap">
+            {% if profile.profile_image %}
+              <img id="preview-avatar" class="avatar" src="{{ profile.profile_image.url }}" alt="" width="96" height="96">
+            {% else %}
+              <div id="preview-avatar-fallback" class="avatar placeholder" aria-hidden="true">{{ profile.display_name|first|upper }}</div>
+            {% endif %}
+          </div>
+          <h3 id="preview-name" class="display-name">{{ profile.display_name }}</h3>
+          <p id="preview-handle" class="handle">@{{ profile.handle }}</p>
+          {% comment %} minimal button stack mimic {% endcomment %}
+          <ul id="preview-links" class="link-list">
+            {% for l in profile.links.all|slice:":3" %}
+              <li class="link-item"><a class="link-btn" href="#" tabindex="-1">{{ l.title|default:l.url }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+    <div class="sticky-actions">
+      <a class="btn" href="{{ profile.get_absolute_url }}" target="_blank" rel="noopener">View public profile</a>
       <button class="btn primary" type="submit">Save changes</button>
     </div>
   </form>
 </section>
-<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+
+<link rel="stylesheet" href="{% static 'css/site.css' %}">
+
+<script>
+(function(){
+  // Copy URL
+  const copyBtn = document.getElementById('copy-profile-url');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(copyBtn.dataset.url);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(()=>copyBtn.textContent='Copy URL', 1600);
+      } catch(e) { console.error(e); }
+    });
+  }
+
+  // Drag & drop ordering (sync to ORDER + sort_order)
+  const list = document.getElementById('links');
+  if (list) {
+    list.querySelectorAll('.row').forEach(li => li.draggable = true);
+    let dragSrc = null;
+
+    function syncOrder(){
+      const rows = [...list.querySelectorAll('.row')];
+      rows.forEach((row, idx) => {
+        const orderInput = row.querySelector('input[name$="-ORDER"]');
+        const sortInput  = row.querySelector('input[name$="-sort_order"]');
+        if (orderInput) orderInput.value = idx + 1;
+        if (sortInput)  sortInput.value = idx + 1;
+      });
+    }
+
+    list.addEventListener('dragstart', e => {
+      const li = e.target.closest('.row'); if(!li) return;
+      dragSrc = li; li.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    list.addEventListener('dragend', e => {
+      const li = e.target.closest('.row');
+      if(li) li.classList.remove('dragging');
+      dragSrc = null; syncOrder();
+    });
+    list.addEventListener('dragover', e => {
+      e.preventDefault();
+      const after = getAfter(list, e.clientY);
+      if (!dragSrc) return;
+      if (after == null) list.appendChild(dragSrc);
+      else list.insertBefore(dragSrc, after);
+    });
+    function getAfter(container, y){
+      const els = [...container.querySelectorAll('.row:not(.dragging)')];
+      return els.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height/2;
+        return (offset < 0 && offset > closest.offset) ? {offset, element: child} : closest;
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // Keyboard move: Ctrl + Up/Down
+    list.addEventListener('keydown', e => {
+      const row = e.target.closest('.row'); if(!row) return;
+      if(e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')){
+        e.preventDefault();
+        if(e.key === 'ArrowUp' && row.previousElementSibling) {
+          row.parentNode.insertBefore(row, row.previousElementSibling); row.focus();
+        }
+        if(e.key === 'ArrowDown' && row.nextElementSibling) {
+          row.parentNode.insertBefore(row.nextElementSibling, row); row.focus();
+        }
+        syncOrder();
+      }
+    });
+  }
+
+  // Live preview: name, handle, links (first three)
+  const dn = document.getElementById('{{ pform.display_name.id_for_label }}');
+  const hh = document.getElementById('{{ pform.handle.id_for_label }}');
+  const previewName = document.getElementById('preview-name');
+  const previewHandle = document.getElementById('preview-handle');
+  function setText(el, val){ if(el) el.textContent = val; }
+  if (dn) dn.addEventListener('input', () => setText(previewName, dn.value || 'Your profile'));
+  if (hh) hh.addEventListener('input', () => setText(previewHandle, '@' + (hh.value || '{{ profile.handle }}')));
+
+})();
+</script>
 {% endblock %}
