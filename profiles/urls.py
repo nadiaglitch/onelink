@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path("", views.index, name="index"),
+    path("accounts/register/", views.register, name="register"),
     path("@<str:handle>/", views.ProfileDetailView.as_view(), name="profile-detail"),
     
     # unified editor at /links

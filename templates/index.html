@@ -33,7 +33,86 @@
       <div class="login-button-wrap">
         <button class="btn primary" type="submit">Sign in</button>
       </div>
+
+      <div class="form-row new-here">
+        <label for="open-register">New here?</label>
+        <div class="login-button-wrap">
+          <button type="button" class="btn secondary" id="open-register">Register</button>
+        </div>
+      </div>
+
+
+      
     </form>
+
+    {% block modals %}
+  <!-- Register Modal -->
+  <div class="modal-backdrop" id="register-backdrop" hidden></div>
+
+  <div class="modal" id="register-modal" role="dialog" aria-modal="true" aria-labelledby="register-title" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="register-title">Create your account</h2>
+      </div>
+
+      <form method="post" action="{% url 'register' %}" novalidate>
+        {% csrf_token %}
+        <div class="form-row">
+          <label for="id_reg_username">Username</label>
+          <input id="id_reg_username" type="text" name="username" required autocomplete="username">
+        </div>
+        <div class="form-row">
+          <label for="id_reg_password1">Password</label>
+          <input id="id_reg_password1" type="password" name="password1" required autocomplete="new-password">
+        </div>
+        <div class="form-row">
+          <label for="id_reg_password2">Confirm password</label>
+          <input id="id_reg_password2" type="password" name="password2" required autocomplete="new-password">
+        </div>
+
+        <div class="modal-foot">
+          <button class="btn primary" type="submit">Create account</button>
+          <button class="btn secondary" type="button" id="cancel-register">Cancel</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+{% endblock %}
+  
+      </div>
+    </div>
+
+    <script>
+    (function(){
+      const openBtn = document.getElementById('open-register');
+      const cancelBtn = document.getElementById('cancel-register');
+      const modal = document.getElementById('register-modal');
+      const backdrop = document.getElementById('register-backdrop');
+
+      function openModal(){
+        modal.hidden = false;
+        backdrop.hidden = false;
+        document.body.style.overflow = 'hidden';
+        modal.querySelector('input')?.focus();
+      }
+      function closeModal(){
+        modal.hidden = true;
+        backdrop.hidden = true;
+        document.body.style.overflow = '';
+        openBtn?.focus();
+      }
+
+      openBtn?.addEventListener('click', openModal);
+      cancelBtn?.addEventListener('click', closeModal);
+      backdrop?.addEventListener('click', closeModal);
+      document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && !modal.hidden) closeModal(); });
+    })();
+    </script>
+
+
+
+
   {% endif %}
 </section>
 {% endblock %}

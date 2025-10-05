@@ -1,7 +1,7 @@
-# onelink/profiles/views.py
+from django.contrib.auth import login
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,7 +10,6 @@ from django.views.generic import DetailView, ListView, CreateView, UpdateView, D
 from django.urls import reverse_lazy, reverse
 from django.views.decorators.http import require_POST
 from django.db import models, transaction
-
 from .models import Profile, Link
 from .forms import ProfileForm, LinkFormSet  # <-- NEW
 
@@ -178,3 +177,15 @@ def link_reorder(request):
             Link.objects.filter(id=link_id).update(sort_order=idx)
 
     return JsonResponse({"ok": True})
+
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # automatically log them in
+            messages.success(request, "Welcome to OneLink! Your account has been created.")
+            return redirect('link-list')  # redirect to edit/profile page
+    else:
+        form = UserCreationForm()
+    return render(request, 'register.html', {'form': form})
