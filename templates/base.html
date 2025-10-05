@@ -32,13 +32,40 @@
         <!-- Nav (right) -->
         <nav id="site-nav" class="nav-links" role="navigation">
           <ul>
-            {% if request.user.is_authenticated %}
-              <li><a href="{% url 'link-list' %}">Edit Profile</a></li>
-              <li><a href="{% url 'logout' %}">Log Out</a></li>
-            {% else %}
-              <li><a href="{% url 'index' %}">Log In</a></li>
-            {% endif %}
+            {% with viewname=request.resolver_match.url_name %}
+              {% if request.user.is_authenticated %}
+                {# Index page: show nothing #}
+                {% if viewname == 'index' %}
+                  {# no nav items on index #}
+
+                {# Public profile (@handle) page: show Edit my profile + Log Out #}
+                {% elif viewname == 'profile-detail' %}
+                  <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
+                  <li><a href="{% url 'logout' %}">Log Out</a></li>
+
+                {# Links editor page: show View public profile + Log Out #}
+                {% elif viewname == 'link-list' %}
+                  <li>
+                    <a href="{% url 'profile-detail' handle=request.user.profile.handle %}">
+                      View public profile
+                    </a>
+                  </li>
+                  <li><a href="{% url 'logout' %}">Log Out</a></li>
+
+                {# Default for any other page when logged in #}
+                {% else %}
+                  <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
+                  <li><a href="{% url 'logout' %}">Log Out</a></li>
+                {% endif %}
+              {% else %}
+                {# Logged out: show Log In on all pages except index (your hero/landing) #}
+                {% if viewname != 'index' %}
+                  <li><a href="{% url 'login' %}">Log In</a></li>
+                {% endif %}
+              {% endif %}
+            {% endwith %}
           </ul>
+
         </nav>
       {% endif %}
 

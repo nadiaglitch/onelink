@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
+from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView, View
@@ -11,8 +12,15 @@ from django.urls import reverse_lazy, reverse
 from django.views.decorators.http import require_POST
 from django.db import models, transaction
 from .models import Profile, Link
-from .forms import ProfileForm, LinkFormSet  # <-- NEW
+from .forms import ProfileForm, LinkForm, LinkFormSet
 
+LinkFormSet = inlineformset_factory(
+    Profile,
+    Link,
+    form=LinkForm,
+    extra=0,
+    can_delete=True
+)
 
 def _ensure_profile_for(user):
     """
@@ -189,3 +197,25 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, 'register.html', {'form': form})
+
+@login_required
+def post_login_redirect(request):
+    """
+    After a successful login, send the user to their public profile page.
+    Prefers profile.handle; falls back to username if needed.
+    Also respects ?next=... if Django didn't already handle it.
+    """
+    # If for some reason ?next= is still present, honor it.
+    next_url = request.GET.get("next")
+    if next_url:
+        return redirect(next_url)
+
+    user = request.user
+    handle = getattr(getattr(user, "profile", None), "handle", None) or user.username
+    return redirect("profile-detail", handle=handle)
+
+def links_list(request):
+    profile = request.user.profile
+    formset = LinkFormSet(instance=profile, queryset=Link.objects.filter(profile=profile))
+    # ...
+    return render(request, "profiles/links_list.html", {"formset": formset, "links": profile.link_set.all()})

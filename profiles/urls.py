@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path("", views.index, name="index"),
+    path("accounts/post-login-redirect/", views.post_login_redirect, name="post-login-redirect"),
     path("accounts/register/", views.register, name="register"),
     path("@<str:handle>/", views.ProfileDetailView.as_view(), name="profile-detail"),
     

@@ -1,253 +1,234 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-<a class="skip-link" href="#links">Skip to forms</a>
+<style>
+.editable-text {
+  border: none; background: transparent; padding: 0; margin: 0; width: 100%;
+  font: inherit; color: inherit; outline: none;
+}
+.editable-text:focus { outline: 2px dashed #9ca3af; outline-offset: 2px; }
+.editable-area[contenteditable="true"]:focus { outline: 2px dashed #9ca3af; outline-offset: 2px; }
 
-<section class="links-page pretty" aria-labelledby="editor-title">
-  <header class="page-header editor-header">
-    <div class="editor-identity">
-      <div class="avatar-wrap sm">
-        {% if profile.profile_image %}
-          <img class="avatar" src="{{ profile.profile_image.url }}" alt="{{ profile.display_name }} avatar" width="64" height="64" loading="lazy">
-        {% else %}
-          <div class="avatar placeholder" aria-hidden="true">{{ profile.display_name|first|upper }}</div>
-        {% endif %}
+.profile-shell { max-width: 520px; margin: 0 auto; padding: 2rem 1rem 6rem; text-align: center; }
+.avatar-wrap { width: 128px; height: 128px; margin: 0 auto 1rem; position: relative; }
+.avatar-wrap img { width: 128px; height: 128px; border-radius: 9999px; object-fit: cover; }
+.avatar-wrap input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+.handle { color: #6b7280; font-size: 0.95rem; }
+.bio { color: #374151; margin-top: .5rem; }
+
+.links { display: grid; gap: 10px; margin-top: 1.5rem; }
+.link-card {
+  border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 14px;
+  display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center;
+}
+.link-guts { display: grid; gap: 6px; text-align: left; }
+.link-title { font-weight: 600; }
+.link-url { font-size: .9rem; color: #6b7280; word-break: break-all; }
+.link-actions { display: flex; gap: 8px; align-items: center; }
+.icon-btn { border: 1px solid #d1d5db; background: white; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+.icon-btn[disabled] { opacity: .5; cursor: not-allowed; }
+
+.toolbar {
+  position: sticky; bottom: 0; left: 0; right: 0;
+  background: rgba(255,255,255,.8); backdrop-filter: blur(6px);
+  border-top: 1px solid #e5e7eb; padding: 10px; display: flex; gap: 10px; justify-content: center;
+}
+
+.drag { cursor: grab; user-select: none; font-size: 18px; }
+.drag:active { cursor: grabbing; }
+.hidden { display: none; }
+</style>
+
+<div class="profile-shell" x-data="profileLinksEditor()">
+
+  <!-- Handle (centered, inline, visually matches public page) -->
+  <div class="handle"
+      style="display:flex; justify-content:center; align-items:center; margin-bottom:0.25rem; font-size:0.95rem; color:#6b7280;">
+    <span style="font-weight:500; line-height:1;" aria-hidden="true">@</span><input
+      class="editable-text"
+      type="text"
+      name="handle"
+      value="{{ profile.handle }}"
+      placeholder="username"
+      style="text-align:center; width:auto; min-width:6ch; padding:0; margin:0; line-height:1; font:inherit; color:inherit;">
+  </div>
+
+  <!-- Avatar -->
+  <div class="avatar-wrap">
+    <img id="avatarPreview" src="{{ profile.profile_image.url }}" alt="Avatar">
+    <input type="file" name="profile_image" accept="image/*" @change="previewAvatar">
+  </div>
+
+  <!-- Display name -->
+  <h1 style="margin-top: 0.75rem;">
+    <input class="editable-text" type="text" name="display_name" value="{{ profile.display_name }}" placeholder="Your name" style="text-align:center;">
+  </h1>
+
+  <!-- Bio -->
+  <div class="bio editable-area" name="bio" contenteditable="true">{{ profile.bio }}</div>
+
+  <!-- EXISTING LINKS (from formset) -->
+  <div class="links" id="linksList" @dragover.prevent @drop="onDrop">
+    {% if formset.management_form %}{{ formset.management_form }}{% endif %}
+    {% for f in formset %}
+      {# We expect fields: id (hidden), title, url. f.instance is set for existing rows. #}
+      {% with pk=f.instance.pk title_val=f.instance.title url_val=f.instance.url %}
+      <div class="link-card" draggable="true" data-id="{{ pk }}" @dragstart="onDragStart">
+        <div class="link-guts">
+          <input class="editable-text link-title" type="text" value="{{ title_val|default:url_val }}" placeholder="Display title" data-field="title">
+          <input class="editable-text link-url" type="url" value="{{ url_val }}" placeholder="https://example.com" data-field="url">
+        </div>
+        <div class="link-actions">
+          <button type="button" class="icon-btn drag" title="Drag to reorder">⋮⋮</button>
+          <button type="button" class="icon-btn" @click="saveLink($event)" title="Save" {% if not pk %}disabled{% endif %}>Save</button>
+          <button type="button" class="icon-btn" @click="deleteLink($event)" title="Delete" {% if not pk %}disabled{% endif %}>Delete</button>
+        </div>
       </div>
-      <div class="who">
-        <h1 id="editor-title">{{ profile.display_name|default:"Your profile" }}</h1>
-        <p class="muted">@{{ profile.handle }}</p>
-      </div>
+      {% endwith %}
+    {% empty %}
+      <p>No links yet — add your first one below.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Add new link -->
+  <div class="link-card" style="margin-top: 10px;">
+    <div class="link-guts">
+      <input class="editable-text link-title" type="text" placeholder="Display title" id="newTitle">
+      <input class="editable-text link-url" type="url" placeholder="https://example.com" id="newUrl">
     </div>
-
-    <div class="editor-actions">
-      <a class="btn" href="{{ profile.get_absolute_url }}" target="_blank" rel="noopener">View public profile</a>
-      <button class="btn subtle" type="button" id="copy-profile-url" data-url="{{ request.build_absolute_uri|slice:':-len:request.get_full_path' }}{{ profile.get_absolute_url }}">Copy URL</button>
+    <div class="link-actions">
+      <button type="button" class="icon-btn" @click="createLink">Add</button>
     </div>
-  </header>
+  </div>
 
-  {% if messages %}
-    <div class="alerts" role="region" aria-live="polite">
-      {% for message in messages %}
-        <div class="alert {{ message.tags }}">{{ message }}</div>
-      {% endfor %}
-    </div>
-  {% endif %}
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button type="button" class="btn primary"   @click="saveProfile">Save Profile</button>
+    <button type="button" class="btn secondary" @click="resetLocal">Reset Unsaved</button>
+  </div>
 
-  <form method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
+  
+</div>
 
-    <div class="editor-grid">
-      <!-- Profile card -->
-      <section class="card" aria-labelledby="profile-form-title">
-        <div class="card-head">
-          <h2 id="profile-form-title">Profile</h2>
-          <span class="muted">Update your public details</span>
-        </div>
-
-        <div class="form-row">
-          <label for="{{ pform.display_name.id_for_label }}">Display name</label>
-          {{ pform.display_name }}
-          {{ pform.display_name.errors }}
-        </div>
-
-        <div class="form-row">
-          <label for="{{ pform.handle.id_for_label }}">Handle</label>
-          <div class="input-with-prefix">
-            <span class="prefix">@</span>
-            {{ pform.handle }}
-          </div>
-          <small class="muted">Your public URL will be <code>/@{{ pform.handle.value|default:profile.handle }}</code></small>
-          {{ pform.handle.errors }}
-        </div>
-
-        <div class="form-row">
-          <label for="{{ pform.bio.id_for_label }}">Bio</label>
-          {{ pform.bio }}
-          {{ pform.bio.errors }}
-        </div>
-
-        <div class="form-row">
-          <label for="{{ pform.profile_image.id_for_label }}">Avatar</label>
-          {{ pform.profile_image }}
-          {% if profile.profile_image %}
-            <div class="avatar-preview">
-              <img src="{{ profile.profile_image.url }}" alt="Current avatar" width="96" height="96" class="avatar">
-            </div>
-          {% endif %}
-          {{ pform.profile_image.errors }}
-        </div>
-
-        {% for h in pform.hidden_fields %}{{ h }}{% endfor %}
-      </section>
-
-      <!-- Links card -->
-      <section class="card" aria-labelledby="links-form-title">
-        <div class="card-head">
-          <h2 id="links-form-title">Links</h2>
-          <span class="muted">Add, edit, delete & reorder</span>
-        </div>
-
-        {{ formset.management_form }}
-
-        <ol id="links" class="link-list editable" aria-label="Your links">
-          {% for form in formset.forms %}
-            <li class="row" data-index="{{ forloop.counter0 }}" tabindex="0">
-              <div class="cell drag-handle" title="Drag to reorder" aria-hidden="true">⋮⋮</div>
-
-              <div class="cell main">
-                <div class="form-row">
-                  <label>Title</label>
-                  {{ form.title }}
-                  {{ form.title.errors }}
-                </div>
-                <div class="form-row">
-                  <label>URL</label>
-                  {{ form.url }}
-                  {{ form.url.errors }}
-                </div>
-                {{ form.sort_order }}
-              </div>
-
-              <div class="cell actions">
-                {% if form.can_order %}
-                  <input type="hidden" name="{{ form.ORDER.html_name }}" value="{{ form.ORDER.value|default:forloop.counter0 }}">
-                {% endif %}
-                {% if form.can_delete %}
-                  <label class="delete-checkbox">
-                    {{ form.DELETE }} <span>Delete</span>
-                  </label>
-                {% endif %}
-              </div>
-
-              {% for h in form.hidden_fields %}{{ h }}{% endfor %}
-              {% if form.non_field_errors %}<div class="alert error">{{ form.non_field_errors }}</div>{% endif %}
-            </li>
-          {% empty %}
-            <li class="empty">No links yet — click “Add link”.</li>
-          {% endfor %}
-        </ol>
-
-        <div class="card-foot">
-          <button class="btn" type="button" id="add-row">+ Add link</button>
-        </div>
-      </section>
-
-      <!-- Live preview -->
-      <aside class="card preview" aria-labelledby="preview-title">
-        <div class="card-head">
-          <h2 id="preview-title">Preview</h2>
-          <span class="muted">How your page looks</span>
-        </div>
-        <div class="profile-preview">
-          <div class="avatar-wrap">
-            {% if profile.profile_image %}
-              <img id="preview-avatar" class="avatar" src="{{ profile.profile_image.url }}" alt="" width="96" height="96">
-            {% else %}
-              <div id="preview-avatar-fallback" class="avatar placeholder" aria-hidden="true">{{ profile.display_name|first|upper }}</div>
-            {% endif %}
-          </div>
-          <h3 id="preview-name" class="display-name">{{ profile.display_name }}</h3>
-          <p id="preview-handle" class="handle">@{{ profile.handle }}</p>
-          {% comment %} minimal button stack mimic {% endcomment %}
-          <ul id="preview-links" class="link-list">
-            {% for l in profile.links.all|slice:":3" %}
-              <li class="link-item"><a class="link-btn" href="#" tabindex="-1">{{ l.title|default:l.url }}</a></li>
-            {% endfor %}
-          </ul>
-        </div>
-      </aside>
-    </div>
-
-    <div class="sticky-actions">
-      <a class="btn" href="{{ profile.get_absolute_url }}" target="_blank" rel="noopener">View public profile</a>
-      <button class="btn primary" type="submit">Save changes</button>
-    </div>
-  </form>
-</section>
-
-<link rel="stylesheet" href="{% static 'css/site.css' %}">
-
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 <script>
-(function(){
-  // Copy URL
-  const copyBtn = document.getElementById('copy-profile-url');
-  if (copyBtn) {
-    copyBtn.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(copyBtn.dataset.url);
-        copyBtn.textContent = 'Copied!';
-        setTimeout(()=>copyBtn.textContent='Copy URL', 1600);
-      } catch(e) { console.error(e); }
-    });
-  }
+function profileLinksEditor() {
+  return {
+    dragEl: null,
 
-  // Drag & drop ordering (sync to ORDER + sort_order)
-  const list = document.getElementById('links');
-  if (list) {
-    list.querySelectorAll('.row').forEach(li => li.draggable = true);
-    let dragSrc = null;
+    previewAvatar(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => { document.getElementById('avatarPreview').src = ev.target.result; };
+      reader.readAsDataURL(file);
+    },
 
-    function syncOrder(){
-      const rows = [...list.querySelectorAll('.row')];
-      rows.forEach((row, idx) => {
-        const orderInput = row.querySelector('input[name$="-ORDER"]');
-        const sortInput  = row.querySelector('input[name$="-sort_order"]');
-        if (orderInput) orderInput.value = idx + 1;
-        if (sortInput)  sortInput.value = idx + 1;
-      });
-    }
-
-    list.addEventListener('dragstart', e => {
-      const li = e.target.closest('.row'); if(!li) return;
-      dragSrc = li; li.classList.add('dragging');
+    onDragStart(e) {
+      this.dragEl = e.currentTarget;
       e.dataTransfer.effectAllowed = 'move';
-    });
-    list.addEventListener('dragend', e => {
-      const li = e.target.closest('.row');
-      if(li) li.classList.remove('dragging');
-      dragSrc = null; syncOrder();
-    });
-    list.addEventListener('dragover', e => {
-      e.preventDefault();
-      const after = getAfter(list, e.clientY);
-      if (!dragSrc) return;
-      if (after == null) list.appendChild(dragSrc);
-      else list.insertBefore(dragSrc, after);
-    });
-    function getAfter(container, y){
-      const els = [...container.querySelectorAll('.row:not(.dragging)')];
-      return els.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height/2;
-        return (offset < 0 && offset > closest.offset) ? {offset, element: child} : closest;
-      }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
+    },
+    onDrop(e) {
+      const list = document.getElementById('linksList');
+      const children = [...list.querySelectorAll('.link-card[data-id]')];
+      const after = children.find(child => {
+        const rect = child.getBoundingClientRect();
+        return e.clientY < rect.top + rect.height / 2;
+      });
+      list.insertBefore(this.dragEl, after || null);
+      this.saveOrder();
+    },
 
-    // Keyboard move: Ctrl + Up/Down
-    list.addEventListener('keydown', e => {
-      const row = e.target.closest('.row'); if(!row) return;
-      if(e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')){
-        e.preventDefault();
-        if(e.key === 'ArrowUp' && row.previousElementSibling) {
-          row.parentNode.insertBefore(row, row.previousElementSibling); row.focus();
-        }
-        if(e.key === 'ArrowDown' && row.nextElementSibling) {
-          row.parentNode.insertBefore(row.nextElementSibling, row); row.focus();
-        }
-        syncOrder();
+    async saveOrder() {
+      // POST to link-reorder with ids in DOM order.
+      const ids = [...document.querySelectorAll('.link-card[data-id]')]
+        .map(el => el.dataset.id)
+        .filter(Boolean);
+      if (!ids.length) return;
+      const url = "{% url 'link-reorder' %}";
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ordered_ids: ids }) // matches common server naming
+      }).catch(console.error);
+    },
+
+    async saveLink(ev) {
+      const card = ev.currentTarget.closest('.link-card');
+      const id = card.dataset.id;
+      const title = card.querySelector('[data-field="title"]').value.trim();
+      const url = card.querySelector('[data-field="url"]').value.trim();
+      if (!url) { alert('URL is required'); return; }
+      const endpoint = "{% url 'link-update' pk=0 %}".replace('/0/', `/${id}/`);
+      const form = new FormData();
+      form.append('title', title);
+      form.append('url', url);
+      await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: form
+      }).then(() => location.reload()).catch(console.error);
+    },
+
+    async createLink() {
+      const title = document.getElementById('newTitle').value.trim();
+      const url = document.getElementById('newUrl').value.trim();
+      if (!url) { alert('Enter a URL'); return; }
+      const form = new FormData();
+      form.append('title', title);
+      form.append('url', url);
+      await fetch("{% url 'link-create' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: form
+      }).then(() => location.reload()).catch(console.error);
+    },
+
+    async deleteLink(ev) {
+      const card = ev.currentTarget.closest('.link-card');
+      const id = card.dataset.id;
+      if (!id) return;
+      if (!confirm('Delete this link?')) return;
+      const endpoint = "{% url 'link-delete' pk=0 %}".replace('/0/', `/${id}/`);
+      await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+      }).then(() => location.reload()).catch(console.error);
+    },
+
+    async saveProfile() {
+      const form = new FormData();
+      form.append('display_name', document.querySelector('input[name="display_name"]').value.trim());
+      form.append('handle', document.querySelector('input[name="handle"]').value.trim());
+      form.append('bio', document.querySelector('.bio').innerText.trim());
+      const fileInput = document.querySelector('input[name="profile_image"]');
+      if (fileInput && fileInput.files[0]) form.append('profile_image', fileInput.files[0]);
+
+      await fetch('', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: form
+      }).then(() => location.reload()).catch(console.error);
+    },
+
+    resetLocal() { location.reload(); }
+  };
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
       }
-    });
+    }
   }
-
-  // Live preview: name, handle, links (first three)
-  const dn = document.getElementById('{{ pform.display_name.id_for_label }}');
-  const hh = document.getElementById('{{ pform.handle.id_for_label }}');
-  const previewName = document.getElementById('preview-name');
-  const previewHandle = document.getElementById('preview-handle');
-  function setText(el, val){ if(el) el.textContent = val; }
-  if (dn) dn.addEventListener('input', () => setText(previewName, dn.value || 'Your profile'));
-  if (hh) hh.addEventListener('input', () => setText(previewHandle, '@' + (hh.value || '{{ profile.handle }}')));
-
-})();
+  return cookieValue;
+}
 </script>
 {% endblock %}

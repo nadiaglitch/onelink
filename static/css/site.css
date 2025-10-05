@@ -248,3 +248,29 @@ body.index-page .new-here .login-button-wrap {
 @media (prefers-reduced-motion: reduce){
   *{transition:none !important;animation:none !important}
 }
+
+/* --- overrides to match global button + background styles --- */
+
+/* give breathing room after the last link */
+.links { margin-bottom: 1.0rem; }
+
+/* toolbar matches site background and isn’t sticky */
+.toolbar {
+  position: static;                 /* no sticky bar */
+  background: transparent;          /* same as site background */
+  backdrop-filter: none;
+  border-top: none;
+  padding: 0;                       /* rely on button padding */
+  margin-top: 1.5rem;               /* space above the buttons */
+  display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap;
+}
+
+/* Editor toolbar – match page background */
+.profile-shell .toolbar {
+  background: var(--bg);      /* same as body background */
+  position: static;           /* not sticky */
+  backdrop-filter: none;
+  border-top: none;
+  padding: 0;
+  margin-top: 1.5rem;         /* space above buttons */
+}
