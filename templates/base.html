@@ -31,13 +31,14 @@
       <nav id="site-nav" class="nav-links" role="navigation">
         <ul>
           {% if request.user.is_authenticated %}
-            <li><a href="{% url 'link-list' %}">Edit</a></li>
-            <li><a href="{% url 'logout' %}">Logout</a></li>
+            <li><a href="{% url 'link-list' %}">Edit Profile</a></li>
+            <li><a href="{% url 'logout' %}">Log Out</a></li>
           {% else %}
-            <li><a href="{% url 'login' %}">Login</a></li>
+            <li><a href="{% url 'login' %}">Log In</a></li>
           {% endif %}
         </ul>
       </nav>
+
     </div>
   </header>
   <main role="main">
