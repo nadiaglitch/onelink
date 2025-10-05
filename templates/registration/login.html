@@ -1,21 +1,55 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block content %}
-  <h1>Log in</h1>
+  <div class="container" style="max-width:520px; margin:0 auto; padding:2rem 1rem 3rem;">
+    <div class="card">
+      <div class="card-head">
+        <h1 style="margin:0;">Log in</h1>
+      </div>
 
-  {% if form.errors %}
-    <p style="color:#b91c1c">Please check your username and password.</p>
-  {% endif %}
+      {% if form.errors %}
+        <div style="color:#b91c1c; padding:.75rem; border:1px solid var(--border); border-radius:.75rem; background:rgba(185,28,28,.1);">
+          Please check your username and password.
+        </div>
+      {% endif %}
 
-  <form method="post" action="{% url 'login' %}">
-    {% csrf_token %}
-    <div>
-      <label for="id_username">Username</label>
-      <input type="text" name="username" id="id_username" autofocus required>
+      <form method="post" action="{% url 'login' %}" novalidate style="display:grid; gap:1rem;">
+        {% csrf_token %}
+
+        {# keep "next" if present #}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+        <div class="form-row">
+          <label for="id_username">Username</label>
+          <input type="text" name="username" id="id_username" required autofocus>
+        </div>
+
+        <div class="form-row">
+          <label for="id_password">Password</label>
+          <input type="password" name="password" id="id_password" required>
+        </div>
+
+        <div class="card-foot" style="display:flex; justify-content:center; gap:.75rem; margin-top:.5rem;">
+          <button class="btn primary" type="submit" style="min-width:150px;">Log in</button>
+        </div>
+      </form>
     </div>
-    <div style="margin-top:8px">
-      <label for="id_password">Password</label>
-      <input type="password" name="password" id="id_password" required>
-    </div>
-    <button type="submit" style="margin-top:12px">Log in</button>
-  </form>
+  </div>
+
+  <style>
+  /* Make inputs responsive within the card */
+  form input[type="text"],
+  form input[type="password"] {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Optional: stack buttons on small screens */
+  @media (max-width: 480px) {
+    .card-foot { flex-direction: column !important; }
+    .card-foot .btn { width: 100% !important; }
+  }
+  </style>
 {% endblock %}

@@ -42,6 +42,17 @@
 
 <div class="profile-shell" x-data="profileLinksEditor()">
 
+  <!-- Avatar -->
+  <div class="avatar-wrap">
+    <img id="avatarPreview" src="{{ profile.profile_image.url }}" alt="Avatar">
+    <input type="file" name="profile_image" accept="image/*" @change="previewAvatar">
+  </div>
+
+  <!-- Display name -->
+  <h1 style="margin-top: 0.75rem;">
+    <input class="editable-text" type="text" name="display_name" value="{{ profile.display_name }}" placeholder="Your name" style="text-align:center;">
+  </h1>
+
   <!-- Handle (centered, inline, visually matches public page) -->
   <div class="handle"
       style="display:flex; justify-content:center; align-items:center; margin-bottom:0.25rem; font-size:0.95rem; color:#6b7280;">
@@ -54,17 +65,6 @@
       style="text-align:center; width:auto; min-width:6ch; padding:0; margin:0; line-height:1; font:inherit; color:inherit;">
   </div>
 
-  <!-- Avatar -->
-  <div class="avatar-wrap">
-    <img id="avatarPreview" src="{{ profile.profile_image.url }}" alt="Avatar">
-    <input type="file" name="profile_image" accept="image/*" @change="previewAvatar">
-  </div>
-
-  <!-- Display name -->
-  <h1 style="margin-top: 0.75rem;">
-    <input class="editable-text" type="text" name="display_name" value="{{ profile.display_name }}" placeholder="Your name" style="text-align:center;">
-  </h1>
-
   <!-- Bio -->
   <div class="bio editable-area" name="bio" contenteditable="true">{{ profile.bio }}</div>
 
@@ -73,19 +73,40 @@
     {% if formset.management_form %}{{ formset.management_form }}{% endif %}
     {% for f in formset %}
       {# We expect fields: id (hidden), title, url. f.instance is set for existing rows. #}
-      {% with pk=f.instance.pk title_val=f.instance.title url_val=f.instance.url %}
-      <div class="link-card" draggable="true" data-id="{{ pk }}" @dragstart="onDragStart">
-        <div class="link-guts">
-          <input class="editable-text link-title" type="text" value="{{ title_val|default:url_val }}" placeholder="Display title" data-field="title">
-          <input class="editable-text link-url" type="url" value="{{ url_val }}" placeholder="https://example.com" data-field="url">
-        </div>
-        <div class="link-actions">
-          <button type="button" class="icon-btn drag" title="Drag to reorder">⋮⋮</button>
-          <button type="button" class="icon-btn" @click="saveLink($event)" title="Save" {% if not pk %}disabled{% endif %}>Save</button>
-          <button type="button" class="icon-btn" @click="deleteLink($event)" title="Delete" {% if not pk %}disabled{% endif %}>Delete</button>
-        </div>
+
+    {% with pk=f.instance.pk title_val=f.instance.title url_val=f.instance.url %}
+    <div class="link-card" draggable="true" data-id="{{ pk }}" @dragstart="onDragStart">
+      <div class="link-guts">
+        <input
+          class="editable-text link-title"
+          type="text"
+          value="{{ title_val|default:url_val }}"
+          placeholder="Display title"
+          data-field="title"
+          :data-original="undefined"
+          data-original="{{ title_val|default:url_val }}"
+          @blur="onLinkFieldBlur($event)"
+        >
+        <input
+          class="editable-text link-url"
+          type="url"
+          value="{{ url_val }}"
+          placeholder="https://example.com"
+          data-field="url"
+          :data-original="undefined"
+          data-original="{{ url_val }}"
+          @blur="onLinkFieldBlur($event)"
+        >
+        <small class="muted hidden" data-edited-pill>Edited</small>
       </div>
-      {% endwith %}
+      <div class="link-actions">
+        <button type="button" class="icon-btn drag" title="Drag to reorder">⋮⋮</button>
+        <!-- Removed individual Save button -->
+        <button type="button" class="icon-btn" @click="deleteLink($event)" title="Delete" {% if not pk %}disabled{% endif %}>Delete</button>
+      </div>
+    </div>
+    {% endwith %}
+
     {% empty %}
       <p>No links yet — add your first one below.</p>
     {% endfor %}
@@ -104,8 +125,8 @@
 
   <!-- Toolbar -->
   <div class="toolbar">
-    <button type="button" class="btn primary"   @click="saveProfile">Save Profile</button>
-    <button type="button" class="btn secondary" @click="resetLocal">Reset Unsaved</button>
+    <button type="button" class="btn primary"   @click="saveProfile">Save profile</button>
+    <button type="button" class="btn secondary" @click="resetLocal">Reset unsaved</button>
   </div>
 
   
@@ -116,6 +137,8 @@
 function profileLinksEditor() {
   return {
     dragEl: null,
+    // id -> { title: "...", url: "..." } (only fields that changed)
+    dirtyLinks: {},
 
     previewAvatar(e) {
       const file = e.target.files[0];
@@ -141,7 +164,6 @@ function profileLinksEditor() {
     },
 
     async saveOrder() {
-      // POST to link-reorder with ids in DOM order.
       const ids = [...document.querySelectorAll('.link-card[data-id]')]
         .map(el => el.dataset.id)
         .filter(Boolean);
@@ -150,34 +172,55 @@ function profileLinksEditor() {
       await fetch(url, {
         method: 'POST',
         headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ordered_ids: ids }) // matches common server naming
+        body: JSON.stringify({ ordered_ids: ids })
       }).catch(console.error);
     },
 
-    async saveLink(ev) {
-      const card = ev.currentTarget.closest('.link-card');
-      const id = card.dataset.id;
-      const title = card.querySelector('[data-field="title"]').value.trim();
-      const url = card.querySelector('[data-field="url"]').value.trim();
-      if (!url) { alert('URL is required'); return; }
-      const endpoint = "{% url 'link-update' pk=0 %}".replace('/0/', `/${id}/`);
-      const form = new FormData();
-      form.append('title', title);
-      form.append('url', url);
-      await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'X-CSRFToken': getCookie('csrftoken') },
-        body: form
-      }).then(() => location.reload()).catch(console.error);
+    onLinkFieldBlur(ev) {
+      const input = ev.currentTarget;
+      const card = input.closest('.link-card');
+      const id = card?.dataset?.id;
+      if (!id) return;
+
+      const field = input.dataset.field; // "title" | "url"
+      const original = input.getAttribute('data-original') ?? '';
+      const current  = input.value.trim();
+
+      // Compare; if changed, store in dirty map
+      if (current !== original) {
+        if (!this.dirtyLinks[id]) this.dirtyLinks[id] = {};
+        this.dirtyLinks[id][field] = current;
+        this.markEdited(card, true);
+      } else {
+        // If reverted to original, clean dirty state for that field
+        if (this.dirtyLinks[id]) {
+          delete this.dirtyLinks[id][field];
+          if (!Object.keys(this.dirtyLinks[id]).length) delete this.dirtyLinks[id];
+        }
+        // If no fields left dirty for this card, clear pill
+        if (!this.dirtyLinks[id]) this.markEdited(card, false);
+      }
+    },
+
+    markEdited(card, isEdited) {
+      const pill = card.querySelector('[data-edited-pill]');
+      if (!pill) return;
+      pill.classList.toggle('hidden', !isEdited);
+      // optional: subtle color cue
+      card.style.boxShadow = isEdited ? '0 0 0 2px rgba(52,211,153,.35)' : '';
     },
 
     async createLink() {
-      const title = document.getElementById('newTitle').value.trim();
-      const url = document.getElementById('newUrl').value.trim();
+      const titleEl = document.getElementById('newTitle');
+      const urlEl   = document.getElementById('newUrl');
+      const title = (titleEl?.value || '').trim();
+      const url   = (urlEl?.value || '').trim();
       if (!url) { alert('Enter a URL'); return; }
+
       const form = new FormData();
       form.append('title', title);
       form.append('url', url);
+
       await fetch("{% url 'link-create' %}", {
         method: 'POST',
         headers: { 'X-CSRFToken': getCookie('csrftoken') },
@@ -187,9 +230,10 @@ function profileLinksEditor() {
 
     async deleteLink(ev) {
       const card = ev.currentTarget.closest('.link-card');
-      const id = card.dataset.id;
+      const id = card?.dataset?.id;
       if (!id) return;
       if (!confirm('Delete this link?')) return;
+
       const endpoint = "{% url 'link-delete' pk=0 %}".replace('/0/', `/${id}/`);
       await fetch(endpoint, {
         method: 'POST',
@@ -198,21 +242,65 @@ function profileLinksEditor() {
     },
 
     async saveProfile() {
-      const form = new FormData();
-      form.append('display_name', document.querySelector('input[name="display_name"]').value.trim());
-      form.append('handle', document.querySelector('input[name="handle"]').value.trim());
-      form.append('bio', document.querySelector('.bio').innerText.trim());
-      const fileInput = document.querySelector('input[name="profile_image"]');
-      if (fileInput && fileInput.files[0]) form.append('profile_image', fileInput.files[0]);
+      try {
+        // 1) Persist any edited links first (batch by looping existing endpoint)
+        const updates = Object.entries(this.dirtyLinks);
+        for (const [id, payload] of updates) {
+          const form = new FormData();
+          // Title & URL: send changed value OR current input value (to be safe)
+          const card = document.querySelector(`.link-card[data-id="${id}"]`);
+          const titleVal = (payload.title ?? card?.querySelector('[data-field="title"]')?.value ?? '').trim();
+          const urlVal   = (payload.url   ?? card?.querySelector('[data-field="url"]')?.value   ?? '').trim();
+          if (!urlVal) continue; // don't save empty url
 
-      await fetch('', {
-        method: 'POST',
-        headers: { 'X-CSRFToken': getCookie('csrftoken') },
-        body: form
-      }).then(() => location.reload()).catch(console.error);
+          form.append('title', titleVal);
+          form.append('url', urlVal);
+
+          const endpoint = "{% url 'link-update' pk=0 %}".replace('/0/', `/${id}/`);
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: form
+          });
+          if (!res.ok) throw new Error('Failed to save a link');
+        }
+
+        // 2) Save the profile itself
+        const pform = new FormData();
+        pform.append('display_name', document.querySelector('input[name="display_name"]').value.trim());
+        pform.append('handle', document.querySelector('input[name="handle"]').value.trim());
+        pform.append('bio', document.querySelector('.bio').innerText.trim());
+        const fileInput = document.querySelector('input[name="profile_image"]');
+        if (fileInput && fileInput.files[0]) pform.append('profile_image', fileInput.files[0]);
+
+        const res2 = await fetch('', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken') },
+          body: pform
+        });
+        if (!res2.ok) throw new Error('Failed to save profile');
+
+        // 3) On success: reset dirty state & reload to reflect saved originals
+        this.dirtyLinks = {};
+        location.reload();
+      } catch (e) {
+        console.error(e);
+        alert('Save failed. Please fix any errors and try again.');
+      }
     },
 
-    resetLocal() { location.reload(); }
+    resetLocal() {
+      // Revert all edited link inputs back to their original values
+      const cards = document.querySelectorAll('.link-card[data-id]');
+      cards.forEach(card => {
+        card.querySelectorAll('input[data-field]').forEach(input => {
+          const original = input.getAttribute('data-original') ?? '';
+          input.value = original;
+        });
+        this.markEdited(card, false);
+      });
+      this.dirtyLinks = {};
+    }
   };
 }
 
@@ -231,4 +319,5 @@ function getCookie(name) {
   return cookieValue;
 }
 </script>
+
 {% endblock %}

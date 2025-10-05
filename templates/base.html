@@ -23,7 +23,6 @@
       <!-- Logo (left) -->
       <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
 
-      {% if request.resolver_match.url_name != 'index' %}
         <!-- Mobile menu button -->
         <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation">
           <span class="bar"></span><span class="bar"></span><span class="bar"></span>
@@ -41,7 +40,7 @@
                 {# Public profile (@handle) page: show Edit my profile + Log Out #}
                 {% elif viewname == 'profile-detail' %}
                   <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
-                  <li><a href="{% url 'logout' %}">Log Out</a></li>
+                  <li><a href="{% url 'logout' %}">Log out</a></li>
 
                 {# Links editor page: show View public profile + Log Out #}
                 {% elif viewname == 'link-list' %}
@@ -50,24 +49,26 @@
                       View public profile
                     </a>
                   </li>
-                  <li><a href="{% url 'logout' %}">Log Out</a></li>
+                  <li><a href="{% url 'logout' %}">Log out</a></li>
 
                 {# Default for any other page when logged in #}
                 {% else %}
                   <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
-                  <li><a href="{% url 'logout' %}">Log Out</a></li>
+                  <li><a href="{% url 'logout' %}">Log out</a></li>
                 {% endif %}
               {% else %}
-                {# Logged out: show Log In on all pages except index (your hero/landing) #}
-                {% if viewname != 'index' %}
-                  <li><a href="{% url 'login' %}">Log In</a></li>
+                {# Logged out: show a single context-aware link #}
+                {% if viewname == 'register' %}
+                  <li><a href="{% url 'index' %}">Log in</a></li>
+                {% else %}
+                  {# index and login (and anything else) -> Register #}
+                  <li><a href="{% url 'register' %}">Register</a></li>
                 {% endif %}
               {% endif %}
             {% endwith %}
           </ul>
 
         </nav>
-      {% endif %}
 
 
     </div>

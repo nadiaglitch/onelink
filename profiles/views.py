@@ -77,7 +77,7 @@ class OwnerRequiredMixin(UserPassesTestMixin):
         return self.request.user.is_authenticated
 
 
-# NEW: Unified Profile + Links editor at /links
+# Profile + Links editor at /links
 class ProfileLinksEditorView(LoginRequiredMixin, View):
     template_name = "profiles/profile_links.html"
 
@@ -90,29 +90,42 @@ class ProfileLinksEditorView(LoginRequiredMixin, View):
     def post(self, request):
         profile, _ = _ensure_profile_for(request.user)
         pform = ProfileForm(request.POST, request.FILES, instance=profile)
-        formset = LinkFormSet(request.POST, instance=profile, queryset=profile.links.order_by("sort_order"))
-        if not (pform.is_valid() and formset.is_valid()):
+
+        # Only validate/process the link formset if it was actually submitted
+        # (i.e., management form present).
+        if "form-TOTAL_FORMS" in request.POST:
+            formset = LinkFormSet(request.POST, instance=profile, queryset=profile.links.order_by("sort_order"))
+            formset_valid = formset.is_valid()
+        else:
+            # No link submission — keep an unbound formset so the page can re-render fine.
+            formset = LinkFormSet(instance=profile, queryset=profile.links.order_by("sort_order"))
+            formset_valid = True
+
+        if not (pform.is_valid() and formset_valid):
             messages.error(request, "Please fix the errors below.")
             return render(request, self.template_name, {"pform": pform, "formset": formset, "profile": profile})
 
         with transaction.atomic():
+            # Save profile fields (display_name, handle, bio, profile_image)
             pform.save()
 
-            # Delete marked links first
-            for obj in formset.deleted_objects:
-                obj.delete()
+            # If links were submitted, save them too (keeping sort order)
+            if "form-TOTAL_FORMS" in request.POST:
+                # Delete any marked-for-deletion links
+                for obj in formset.deleted_objects:
+                    obj.delete()
 
-            # Save remaining links; apply ORDER (if provided) to sort_order
-            cleaned = [f for f in formset.forms if f.cleaned_data and not f.cleaned_data.get("DELETE")]
-            ordered_forms = sorted(cleaned, key=lambda f: f.cleaned_data.get("ORDER", 0))
-            for idx, f in enumerate(ordered_forms, start=1):
-                link = f.save(commit=False)
-                link.profile = profile
-                link.sort_order = idx
-                link.save()
+                cleaned = [f for f in formset.forms if f.cleaned_data and not f.cleaned_data.get("DELETE")]
+                ordered_forms = sorted(cleaned, key=lambda f: f.cleaned_data.get("ORDER", 0))
+                for idx, f in enumerate(ordered_forms, start=1):
+                    link = f.save(commit=False)
+                    link.profile = profile
+                    link.sort_order = idx
+                    link.save()
 
         messages.success(request, "Profile & links updated.")
-        return redirect("link-list")  # stay on the same editor page
+        # Redirect back to the editor
+        return redirect("link-list")
 
 
 # (Optional legacy CRUD: you can keep/remove as you wish)

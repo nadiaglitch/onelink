@@ -62,12 +62,6 @@ body{background:var(--bg);color:var(--text);margin:0}
   .nav-links a{display:block}
 }
 
-/* Hide nav + burger on index page (belt-and-braces) */
-body.index-page .nav-toggle,
-body.index-page .nav-links{display:none !important}
-/* Center header content on index (logo only) */
-body.index-page .header-inner{justify-content:center}
-
 /* =========================================
    Shared Button Styles
    ========================================= */
@@ -127,7 +121,7 @@ form input[type="number"],
 form input[type="password"],
 form input[type="file"],
 form textarea{
-  width:100%;padding:.6rem .75rem;border-radius:.75rem;border:1px solid var(--border);
+  width:100%; box-sizing: border-box; max-width: 100%; padding:.6rem .75rem;border-radius:.75rem;border:1px solid var(--border);
   background:var(--card);color:var(--text);
 }
 
@@ -245,10 +239,19 @@ body.index-page .new-here .login-button-wrap {
   .link-list.editable .row{grid-template-columns:32px 1fr}
   .actions{grid-column:1 / -1;justify-content:flex-end}
 }
+
 @media (prefers-reduced-motion: reduce){
   *{transition:none !important;animation:none !important}
 }
 
+@media (max-width: 480px) {
+  .card-foot {
+    flex-direction: column !important;
+  }
+  .card-foot .btn {
+    width: 100% !important;
+  }
+}
 /* --- overrides to match global button + background styles --- */
 
 /* give breathing room after the last link */
