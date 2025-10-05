@@ -16,28 +16,32 @@
     <link rel="icon" type="image/png" sizes="512x512" href="{% static 'favicon/android-chrome-512x512.png' %}">
 
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
+
   <header class="site-header" role="banner">
     <div class="container header-inner">
       <!-- Logo (left) -->
       <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
 
-      <!-- Mobile menu button -->
-      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation">
-        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-      </button>
+      {% if request.resolver_match.url_name != 'index' %}
+        <!-- Mobile menu button -->
+        <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation">
+          <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+        </button>
 
-      <!-- Nav (right) -->
-      <nav id="site-nav" class="nav-links" role="navigation">
-        <ul>
-          {% if request.user.is_authenticated %}
-            <li><a href="{% url 'link-list' %}">Edit Profile</a></li>
-            <li><a href="{% url 'logout' %}">Log Out</a></li>
-          {% else %}
-            <li><a href="{% url 'index' %}">Log In</a></li>
-          {% endif %}
-        </ul>
-      </nav>
+        <!-- Nav (right) -->
+        <nav id="site-nav" class="nav-links" role="navigation">
+          <ul>
+            {% if request.user.is_authenticated %}
+              <li><a href="{% url 'link-list' %}">Edit Profile</a></li>
+              <li><a href="{% url 'logout' %}">Log Out</a></li>
+            {% else %}
+              <li><a href="{% url 'index' %}">Log In</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+
 
     </div>
   </header>

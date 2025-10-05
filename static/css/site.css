@@ -247,7 +247,7 @@ html { scroll-behavior: smooth; }
 .btn.subtle { color:var(--muted); }
 
 /* Form */
-form input[type="text"], form input[type="url"], form input[type="number"], form textarea, form input[type="file"] {
+form input[type="text"], form input[type="url"], form input[type="number"], form input[type="password"], form textarea, form input[type="file"] {
   width: 100%;
   padding: .55rem .75rem;
   border-radius: .75rem;
@@ -362,4 +362,52 @@ form input[type="text"], form input[type="url"], form input[type="number"], form
   display:flex; justify-content:flex-end; gap:.5rem;
   padding: .75rem; margin-top: .75rem;
   background: linear-gradient(to top, var(--bg) 70%, rgba(0,0,0,0));
+}
+
+/* ============ LOGIN PAGE CUSTOM STYLES ============ */
+body.index-page .login-page {
+  text-align: center;                 /* Center headings and form */
+  max-width: 400px;
+  margin: 4rem auto;
+}
+
+body.index-page #welcome-title {
+  text-align: center;
+  margin-bottom: 1.5rem;              /* Space below "Welcome to OneLink" */
+}
+
+/* Form layout */
+body.index-page form {
+  display: grid;
+  gap: 1rem;               /* Adds vertical spacing between fields */
+  text-align: left;
+  margin: 0 auto;          /* Centers the form horizontally */
+}
+
+/* Ensure input spacing consistency */
+body.index-page form div {
+  display: grid;
+  gap: 0.4rem;
+}
+
+/* Button styling */
+body.index-page .login-button-wrap {
+  display: flex;
+  justify-content: center;            /* Center button */
+  margin-top: 1.2rem;                 /* Space above button */
+}
+
+/* Match button shape to inputs */
+body.index-page .btn.primary {
+  border-radius: .75rem;              /* Match input corners */
+  padding: .6rem 1.5rem;
+  font-weight: 600;
+}
+
+/* Force white fields on index (login) page */
+body.index-page form input[type="text"],
+body.index-page form input[type="password"] {
+  background: #ffffff;
+  color: #0b0f19; /* dark text for readability */
+  border: 1px solid var(--border);
 }

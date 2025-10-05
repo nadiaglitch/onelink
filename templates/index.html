@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
-{% block content %}
 
-<section class="links-page" aria-labelledby="welcome-title">
+{% block body_class %}index-page{% endblock %}
+
+{% block content %}
+<section class="links-page login-page" aria-labelledby="welcome-title">
   <h1 id="welcome-title">Welcome to OneLink</h1>
 
   {% if user.is_authenticated %}
@@ -10,7 +12,6 @@
     <a class="btn primary" href="{% url 'link-list' %}">Go to My Links</a>
     <a class="btn danger" href="{% url 'logout' %}">Logout</a>
   {% else %}
-    <h2>Login</h2>
     <form method="post" action="{% url 'login' %}">
       {% csrf_token %}
       {% if form.errors %}
@@ -29,9 +30,10 @@
         <input id="id_password" type="password" name="password" required>
       </div>
 
-      <button class="btn primary" type="submit">Sign in</button>
+      <div class="login-button-wrap">
+        <button class="btn primary" type="submit">Sign in</button>
+      </div>
     </form>
   {% endif %}
 </section>
-
 {% endblock %}
