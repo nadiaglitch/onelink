@@ -32,25 +32,27 @@
     </div>
   </header>
 
-  <nav class="links" aria-label="Profile Links">
-    <ul id="links" class="link-list">
-      {% for link in profile.links.all %}
-        <li class="link-item">
-          <a class="link-btn"
-             href="{{ link.url }}"
-             target="_blank"
-             rel="noopener noreferrer"
-             role="button"
-             {% if link.title %}aria-label="{{ link.title }} (opens in new tab)"{% endif %}>
-            <span class="link-title">{{ link.title|default:link.url }}</span>
-            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false" class="icon external"><path d="M14 3h7v7h-2V6.414l-9.293 9.293-1.414-1.414L17.586 5H14V3ZM5 5h6v2H7v10h10v-4h2v6H5V5Z"/></svg>
-          </a>
-        </li>
-      {% empty %}
-        <li class="link-item empty" aria-live="polite">No links yet.</li>
-      {% endfor %}
-    </ul>
-  </nav>
+<nav class="links" aria-label="Profile Links">
+  <ul id="links" class="link-list">
+    {% for link in links %}
+      <li class="link-item">
+        <a class="link-btn"
+           href="{{ link.url }}"
+           target="_blank"
+           rel="noopener noreferrer"
+           role="button"
+           {% if link.title %}aria-label="{{ link.title }} (opens in new tab)"{% endif %}>
+          <span class="link-title">{{ link.title|default:link.url }}</span>
+          <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false" class="icon external">
+            <path d="M14 3h7v7h-2V6.414l-9.293 9.293-1.414-1.414L17.586 5H14V3ZM5 5h6v2H7v10h10v-4h2v6H5V5Z"/>
+          </svg>
+        </a>
+      </li>
+    {% empty %}
+      <li class="link-item empty" aria-live="polite">No links yet.</li>
+    {% endfor %}
+  </ul>
+</nav>
 
   <footer class="profile-footer">
     <p>Made with OneLink</p>
