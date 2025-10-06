@@ -37,6 +37,14 @@
 .text-sm { font-size: 0.875rem; }
 .text-center { text-align: center; }
 .mt-1 { margin-top: 0.25rem; }
+
+/* Placeholder for empty contenteditable bios */
+.editable-area[data-empty="true"]::before {
+  content: attr(data-placeholder);
+  color: #9ca3af; /* muted gray */
+  pointer-events: none;
+}
+
 </style>
 
 <div class="profile-shell" x-data="profileLinksEditor()">
@@ -83,7 +91,15 @@
   <p x-text="errors.handle" x-show="errors.handle" class="text-red-500 text-sm text-center mt-1" aria-live="polite"></p>
 
   <!-- Bio -->
-  <div class="bio editable-area" name="bio" contenteditable="true" @blur="saveProfile">{{ profile.bio }}</div>
+  <div
+  class="bio editable-area"
+  name="bio"
+  contenteditable="true"
+  data-placeholder="Write your bio here"
+  x-ref="bio"
+  @input="updateBioPlaceholder"
+  @blur="saveProfile"
+>{{ profile.bio|default_if_none:'' }}</div>
 
   <!-- Links list -->
   <div class="links" id="linksList" @dragover.prevent @drop="onDrop">
@@ -141,6 +157,22 @@ function profileLinksEditor() {
     errors: {},
     pendingSaves: {}, // { [id]: true } while a link save is in-flight
 
+    init() {
+      // Run once to set placeholder state for bio on load
+      this.updateBioPlaceholder();
+    },
+
+    updateBioPlaceholder() {
+      const el = this.$refs.bio;
+      if (!el) return;
+      const txt = (el.innerText || '').trim();
+      if (txt.length === 0) {
+        el.setAttribute('data-empty', 'true');
+      } else {
+        el.removeAttribute('data-empty');
+      }
+    },
+    
     /* ========== Avatar ========== */
     previewAvatar(e) {
       const file = e.target.files[0];
