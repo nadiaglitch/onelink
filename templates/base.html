@@ -59,10 +59,10 @@
               {% else %}
                 {# Logged out: show a single context-aware link #}
                 {% if viewname == 'register' %}
-                  <li><a href="{% url 'index' %}">Log in</a></li>
+                  <li><a href="{% url 'index' %}">Sign in</a></li>
                 {% else %}
                   {# index and login (and anything else) -> Register #}
-                  <li><a href="{% url 'register' %}">Register</a></li>
+                  <li><a href="{% url 'register' %}">Sign up</a></li>
                 {% endif %}
               {% endif %}
             {% endwith %}
