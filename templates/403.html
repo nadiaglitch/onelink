@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="nf-shell">
+  <div class="nf-card">
+    <h1 class="nf-title">Access denied</h1>
+    <p class="nf-text">
+      You don’t have permission to view this page.
+      {% if not request.user.is_authenticated %}
+        Please <a href="{% url 'login' %}">log in</a> first.
+      {% endif %}
+    </p>
+
+    <div class="cta">
+      <a class="btn primary" href="{% url 'index' %}">Go to Home</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
