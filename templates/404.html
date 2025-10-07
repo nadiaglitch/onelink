@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  /* Same palette used on profile_detail */
+  :root {
+    --bg: #0d0d0d;
+    --card: #1a1a1a;
+    --text: #ffffff;
+    --muted: #c7c7c7;
+    --accent: #34d399;
+    --btn: #2a2a2a;
+    --btn-hover: #3a3a3a;
+    --focus: #f59e0b;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f8fafc; --card:#ffffff; --text:#0b0f19; --muted:#475569; --btn:#f1f5f9; --btn-hover:#e2e8f0; }
+  }
+
+  body { background: var(--bg); color: var(--text); }
+  .nf-shell { max-width: 640px; margin: 3rem auto; padding: 1.25rem; text-align: center; }
+  .nf-title { font-size: clamp(1.6rem, 2.8vw, 2.2rem); margin: 0 0 .75rem; }
+  .nf-text  { color: var(--muted); margin: 0 0 1.25rem; }
+  .nf-card  { background: var(--card); border: 1px solid rgba(255,255,255,.08); border-radius: 1rem; padding: 1.25rem; }
+
+  .cta { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
+  .btn { display:inline-flex; align-items:center; gap:.5rem; padding:.7rem 1rem; border-radius:.8rem; text-decoration:none; border:1px solid rgba(255,255,255,.08); background: var(--btn); color: var(--text); }
+  .btn:hover { background: var(--btn-hover); }
+  .btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+  .btn.primary { background: var(--accent); color: #0b0f19; border-color: transparent; }
+  .btn.primary:hover { filter: brightness(0.98); }
+
+  .jump { display:flex; gap:.5rem; justify-content:center; margin-top: 1rem; flex-wrap: wrap; }
+  .jump input { padding:.6rem .75rem; border:1px solid rgba(255,255,255,.15); background: transparent; color: var(--text); border-radius:.6rem; min-width: 240px; }
+  .jump input::placeholder { color: var(--muted); }
+</style>
+
+<section class="nf-shell">
+  <div class="nf-card">
+    <h1 class="nf-title">Page not found</h1>
+    <p class="nf-text">The page you’re looking for doesn’t exist or may have moved.</p>
+
+    <div class="cta">
+      <a class="btn primary" href="{% url 'index' %}">Go to Home</a>
+      {% if request.user.is_authenticated %}
+        <a class="btn" href="{% url 'link-list' %}">Edit my links</a>
+      {% endif %}
+    </div>
+
+    <form class="jump" onsubmit="event.preventDefault(); gotoHandle();">
+      <input id="handleLookup" type="text" placeholder="Jump to @handle (e.g. nadia)" autocomplete="off" />
+      <button class="btn" type="submit">Go</button>
+    </form>
+  </div>
+</section>
+
+<script>
+function gotoHandle() {
+  const v = (document.getElementById('handleLookup').value || '').trim().toLowerCase().replace(/^@/, '');
+  if (!v) return;
+  window.location.href = `/@${encodeURIComponent(v)}`;
+}
+</script>
+{% endblock %}
