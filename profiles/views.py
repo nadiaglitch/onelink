@@ -130,32 +130,6 @@ class LinkDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
         self.object = obj
         return obj
 
-@require_POST
-@login_required
-def link_reorder(request):
-    try:
-        data = json.loads(request.body.decode("utf-8"))
-        ids = [int(x) for x in data.get("ordered_ids", [])]
-    except Exception:
-        return HttpResponseBadRequest("invalid json")
-
-    qs = Link.objects.filter(profile=request.user.profile, id__in=ids)
-    found = {l.id: l for l in qs}
-
-    updates = []
-    for idx, link_id in enumerate(ids):
-        link = found.get(link_id)
-        if not link:
-            continue
-        if link.position != idx:
-            link.position = idx
-            updates.append(link)
-
-    if updates:
-        Link.objects.bulk_update(updates, ["position"])
-
-    return JsonResponse({"ok": True, "updated": len(updates)})
-
 def register(request):
     if request.method == "POST":
         form = UserCreationForm(request.POST)

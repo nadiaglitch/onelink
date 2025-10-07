@@ -102,11 +102,11 @@
 >{{ profile.bio|default_if_none:'' }}</div>
 
   <!-- Links list -->
-  <div class="links" id="linksList" @dragover.prevent @drop="onDrop">
+  <div class="links" id="linksList">
     {% if formset.management_form %}{{ formset.management_form }}{% endif %}
     {% for f in formset %}
       {% with pk=f.instance.pk title_val=f.instance.title url_val=f.instance.url %}
-      <div class="link-card" draggable="true" data-id="{{ pk }}" @dragstart="onDragStart">
+      <div class="link-card" data-id="{{ pk }}">
         <div class="link-guts">
           <input
             class="editable-text link-title"
@@ -127,7 +127,6 @@
           <small class="muted hidden" data-edited-pill>Edited</small>
         </div>
         <div class="link-actions">
-          <button type="button" class="icon-btn drag" title="Drag to reorder">⋮⋮</button>
           <button type="button" class="icon-btn" @click="deleteLink($event)" title="Delete" {% if not pk %}disabled{% endif %}>Delete</button>
         </div>
       </div>
@@ -200,28 +199,6 @@ function profileLinksEditor() {
       if (/\s/.test(handle)) return 'Handle cannot contain spaces.';
       if (!/^[a-z0-9_]+$/.test(handle)) return 'Use lowercase letters, numbers, and underscore only.';
       return null;
-    },
-
-    /* ========== Drag & drop reorder ========== */
-    onDragStart(e) { this.dragEl = e.currentTarget; e.dataTransfer.effectAllowed = 'move'; },
-    onDrop(e) {
-      const list = document.getElementById('linksList');
-      const children = [...list.querySelectorAll('.link-card[data-id]')];
-      const after = children.find(child => {
-        const rect = child.getBoundingClientRect();
-        return e.clientY < rect.top + rect.height / 2;
-      });
-      list.insertBefore(this.dragEl, after || null);
-      this.saveOrder();
-    },
-    async saveOrder() {
-      const ids = [...document.querySelectorAll('.link-card[data-id]')].map(el => el.dataset.id).filter(Boolean);
-      if (!ids.length) return;
-      await fetch("{% url 'link-reorder' %}", {
-        method: 'POST',
-        headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ordered_ids: ids })
-      }).catch(console.error);
     },
 
     /* ========== Link: save on blur ========== */
