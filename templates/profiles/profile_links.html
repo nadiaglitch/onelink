@@ -44,10 +44,10 @@
   color: #9ca3af; /* muted gray */
   pointer-events: none;
 }
-
 </style>
 
-<div class="profile-shell" x-data="profileLinksEditor()">
+<!-- Alpine runs init() on mount -->
+<div class="profile-shell" x-data="profileLinksEditor()" x-init="init()">
 
   <!-- Avatar -->
   <div class="avatar-wrap">
@@ -92,14 +92,14 @@
 
   <!-- Bio -->
   <div
-  class="bio editable-area"
-  name="bio"
-  contenteditable="true"
-  data-placeholder="Write your bio here"
-  x-ref="bio"
-  @input="updateBioPlaceholder"
-  @blur="saveProfile"
->{{ profile.bio|default_if_none:'' }}</div>
+    class="bio editable-area"
+    name="bio"
+    contenteditable="true"
+    data-placeholder="Write your bio here"
+    x-ref="bio"
+    @input="updateBioPlaceholder"
+    @blur="saveProfile"
+  >{{ profile.bio|default_if_none:'' }}</div>
 
   <!-- Links list -->
   <div class="links" id="linksList">
@@ -159,6 +159,21 @@ function profileLinksEditor() {
     init() {
       // Run once to set placeholder state for bio on load
       this.updateBioPlaceholder();
+      // On first paint, ensure navbar link matches current input value
+      const handleEl = document.querySelector('input[name="handle"]');
+      if (handleEl) this.updateProfileLinks(handleEl.value.trim());
+    },
+
+    /* ---- small util to update all navbar profile links ---- */
+    updateProfileLinks(newHandle) {
+      if (!newHandle) return;
+      const links = Array.from(document.querySelectorAll('#profile-link, a[data-profile-link]'));
+      links.forEach((a) => {
+        const oldHref = a.getAttribute('href') || a.href || '';
+        // Replace only the "/@<handle>" segment (up to next / ? or #)
+        const replaced = oldHref.replace(/\/@[^\/?#]*/i, `/@${newHandle}`);
+        a.setAttribute('href', replaced === oldHref ? `/@${newHandle}` : replaced);
+      });
     },
 
     updateBioPlaceholder() {
@@ -182,7 +197,7 @@ function profileLinksEditor() {
       this.saveProfile(); // auto-save avatar
     },
 
-    /* ========== Handle input + validation ========== */
+    /* ========== Handle input + validation (optimistic link update) ========== */
     onHandleInput(e) {
       // live normalization: lowercase + strip spaces
       const v = e.target.value;
@@ -192,6 +207,9 @@ function profileLinksEditor() {
       // live validation message
       const msg = this.validateHandle(e.target.value);
       this.errors = msg ? { handle: msg } : {};
+
+      // Immediately reflect in navbar (optimistic)
+      this.updateProfileLinks(e.target.value.trim());
     },
     validateHandle(value) {
       const handle = (value || '').trim();
@@ -293,23 +311,30 @@ function profileLinksEditor() {
 
     /* ========== Profile auto-save (name/handle/bio/avatar) ========== */
     async saveProfile() {
-      const name = document.querySelector('input[name=\"display_name\"]').value.trim();
-      const handle = document.querySelector('input[name=\"handle\"]').value.trim();
-      const bio = document.querySelector('.bio').innerText.trim();
+      const nameEl = document.querySelector('input[name="display_name"]');
+      const handleEl = document.querySelector('input[name="handle"]');
+      const bioEl = document.querySelector('.bio');
 
-      const msg = this.validateHandle(handle);
+      const name = (nameEl?.value || '').trim();
+      const handleTyped = (handleEl?.value || '').trim();
+      const bio = (bioEl?.innerText || '').trim();
+
+      const msg = this.validateHandle(handleTyped);
       if (msg) { this.errors = { handle: msg }; return; }
       this.errors = {};
+
+      // Optimistic: make sure navbar reflects what the user just set on blur
+      this.updateProfileLinks(handleTyped);
 
       try {
         const form = new FormData();
         form.append('display_name', name);
-        form.append('handle', handle);
+        form.append('handle', handleTyped);
         form.append('bio', bio);
-        const fileInput = document.querySelector('input[name=\"profile_image\"]');
+        const fileInput = document.querySelector('input[name="profile_image"]');
         if (fileInput && fileInput.files[0]) form.append('profile_image', fileInput.files[0]);
 
-        const res = await fetch('', {
+        const res = await fetch(window.location.href, {
           method: 'POST',
           headers: { 'X-CSRFToken': getCookie('csrftoken') },
           body: form
@@ -322,12 +347,30 @@ function profileLinksEditor() {
 
         if (res.ok && !errorEl) {
           this.errors = {};
-          // no reload needed
+
+          // Read the canonical/saved handle from the server-rendered form
+          const savedHandleInput = doc.querySelector('input[name="handle"]');
+          const savedHandle = (savedHandleInput?.getAttribute('value') || savedHandleInput?.value || handleTyped).trim();
+
+          // Keep the visible input in sync with server-normalized handle
+          if (handleEl && savedHandle && handleEl.value !== savedHandle) {
+            handleEl.value = savedHandle;
+          }
+
+          // Update navbar again with server-accepted handle (authoritative)
+          this.updateProfileLinks(savedHandle);
+
+          // Also broadcast for any listeners in base.html (harmless if you keep it)
+          window.dispatchEvent(new CustomEvent('profile:saved', { detail: { handle: savedHandle } }));
+
+          console.log('[saveProfile] success, savedHandle =', savedHandle);
         } else {
           this.errors = { handle: errorEl?.innerText || 'Handle already taken or invalid.' };
+          console.warn('[saveProfile] server returned errors:', this.errors.handle);
         }
       } catch (err) {
-        this.errors = { handle: 'Network error. Try again.' };
+        console.error(err);
+        this.errors = { handle: 'Network error while saving. Please try again.' };
       }
     }
   };

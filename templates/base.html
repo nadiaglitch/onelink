@@ -8,13 +8,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="{% static 'css/site.css' %}">
 
-    <!-- favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
-    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon/android-chrome-192x192.png' %}">
-    <link rel="icon" type="image/png" sizes="512x512" href="{% static 'favicon/android-chrome-512x512.png' %}">
-
+  <!-- favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{% static 'favicon/android-chrome-192x192.png' %}">
+  <link rel="icon" type="image/png" sizes="512x512" href="{% static 'favicon/android-chrome-512x512.png' %}">
 </head>
 <body class="{% block body_class %}{% endblock %}">
 
@@ -23,59 +22,56 @@
       <!-- Logo (left) -->
       <img src="{% static 'images/logo.png' %}" alt="Logo" class="logo">
 
-        <!-- Mobile menu button -->
-        <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation">
-          <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-        </button>
+      <!-- Mobile menu button -->
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
 
-        <!-- Nav (right) -->
-        <nav id="site-nav" class="nav-links" role="navigation">
-          <ul>
-            {% with viewname=request.resolver_match.url_name %}
-              {% if request.user.is_authenticated %}
-                {# Index page: show nothing #}
-                {% if viewname == 'index' %}
-                  {# no nav items on index #}
+      <!-- Nav (right) -->
+      <nav id="site-nav" class="nav-links" role="navigation">
+        <ul>
+          {% with viewname=request.resolver_match.url_name %}
+            {% if request.user.is_authenticated %}
+              {# Index page: show nothing #}
+              {% if viewname == 'index' %}
+                {# no nav items on index #}
 
-                {# Public profile (@handle) page: show Edit my profile + Log Out #}
-                {% elif viewname == 'profile-detail' %}
-                  <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
-                  <li><a href="{% url 'logout' %}">Log out</a></li>
+              {# Public profile (@handle) page: show Edit my profile + Log Out #}
+              {% elif viewname == 'profile-detail' %}
+                <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
+                <li><a href="{% url 'logout' %}">Log out</a></li>
 
-                {# Links editor page: show View public profile + Log Out #}
-                {% elif viewname == 'link-list' %}
-                  <li>
-                    <a href="{% url 'profile-detail' handle=request.user.profile.handle %}">
-                      View public profile
-                    </a>
-                  </li>
-                  <li><a href="{% url 'logout' %}">Log out</a></li>
+              {# Links editor page: show View public profile + Log Out #}
+              {% elif viewname == 'link-list' %}
+                <li>
+                  <a id="profile-link" data-profile-link href="{% url 'profile-detail' handle=request.user.profile.handle %}">View public profile</a>
+                </li>
+                <li><a href="{% url 'logout' %}">Log out</a></li>
 
-                {# Default for any other page when logged in #}
-                {% else %}
-                  <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
-                  <li><a href="{% url 'logout' %}">Log out</a></li>
-                {% endif %}
+              {# Default for any other page when logged in #}
               {% else %}
-                {# Logged out: show a single context-aware link #}
-                {% if viewname == 'register' %}
-                  <li><a href="{% url 'index' %}">Sign in</a></li>
-                {% else %}
-                  {# index and login (and anything else) -> Register #}
-                  <li><a href="{% url 'register' %}">Sign up</a></li>
-                {% endif %}
+                <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
+                <li><a href="{% url 'logout' %}">Log out</a></li>
               {% endif %}
-            {% endwith %}
-          </ul>
-
-        </nav>
-
-
+            {% else %}
+              {# Logged out: show a single context-aware link #}
+              {% if viewname == 'register' %}
+                <li><a href="{% url 'index' %}">Sign in</a></li>
+              {% else %}
+                {# index and login (and anything else) -> Register #}
+                <li><a href="{% url 'register' %}">Sign up</a></li>
+              {% endif %}
+            {% endif %}
+          {% endwith %}
+        </ul>
+      </nav>
     </div>
   </header>
+
   <main role="main">
     {% block content %}{% endblock %}
   </main>
+
   <script>
   (function(){
     const btn = document.querySelector('.nav-toggle');
@@ -98,7 +94,31 @@
   })();
   </script>
 
-{% block modals %}{% endblock %}
+  <!-- Listen for profile:saved events to update navbar link(s) -->
+  <script>
+    window.addEventListener('profile:saved', (e) => {
+      try {
+        const handle = (e.detail && e.detail.handle || '').trim();
+        if (!handle) return;
 
+        const links = Array.from(document.querySelectorAll('#profile-link, a[data-profile-link]'));
+        if (!links.length) return;
+
+        links.forEach((a) => {
+          const oldHref = a.getAttribute('href') || a.href || '';
+          // Replace only the "/@<handle>" segment (up to next /, ? or #)
+          const newHref = oldHref.replace(/\/@[^\/?#]*/i, `/@${handle}`);
+          a.setAttribute('href', newHref === oldHref ? `/@${handle}` : newHref);
+        });
+
+        // Debug signal
+        console.log('[profile:saved] navbar link(s) updated to /@' + handle);
+      } catch (err) {
+        console.error('[profile:saved] failed to update navbar link', err);
+      }
+    });
+  </script>
+
+  {% block modals %}{% endblock %}
 </body>
 </html>
