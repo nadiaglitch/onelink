@@ -66,9 +66,23 @@
         </ul>
       </nav>
     </div>
+
   </header>
 
   <main role="main">
+
+    <!-- Login Status Indicator -->
+      <div class="login-status {% if request.user.is_authenticated %}logged-in{% else %}logged-out{% endif %}" aria-live="polite">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="label">
+          {% if request.user.is_authenticated %}
+            Logged in
+          {% else %}
+            Logged out
+          {% endif %}
+        </span>
+      </div>
+      
     {% block content %}{% endblock %}
   </main>
 

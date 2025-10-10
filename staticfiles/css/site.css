@@ -277,3 +277,48 @@ body.index-page .new-here .login-button-wrap {
   padding: 0;
   margin-top: 1.5rem;         /* space above buttons */
 }
+
+/* Base styling */
+.login-status{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.4rem .6rem;
+  border:1px solid transparent;
+  border-radius:.5rem;
+  font-weight:600;
+}
+
+/* Dot element */
+.login-status .dot{
+  width:.6rem;
+  height:.6rem;
+  border-radius:50%;
+  display:inline-block;
+}
+
+/* Logged-in state */
+.login-status.logged-in{
+  color: var(--accent, #34d399);
+  border-color: rgba(52, 211, 153, 0.3);
+  background-color: rgba(52, 211, 153, 0.1);
+}
+.login-status.logged-in .dot{
+  background-color: var(--accent, #34d399);
+}
+
+/* Logged-out state */
+.login-status.logged-out{
+  color:#ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+.login-status.logged-out .dot{
+  background-color: #ef4444;
+}
+
+.login-status-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 1rem;
+}
