@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
+<!-- Reusable inline SVG sprite -->
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute; width:0; height:0; overflow:hidden;">
+  <symbol id="icon-pencil" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.33h-.84v-.84l9.02-9.02.84.84-9.02 9.02zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
+  </symbol>
+</svg>
+
 <style>
 .editable-text {
   border: none; background: transparent; padding: 0; margin: 0; width: 100%;
@@ -44,24 +51,86 @@
   color: #9ca3af; /* muted gray */
   pointer-events: none;
 }
+/* ===== edit icon styling ===== */
+.editable-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-icon {
+  width: 16px;
+  height: 16px;
+  opacity: .45;
+  flex: 0 0 auto;
+  transition: opacity .15s ease;
+}
+
+/* show pencil on hover/focus or when the field has value */
+.editable-wrap:hover .edit-icon,
+.editable-wrap:focus-within .edit-icon {
+  opacity: .9;
+}
+
+/* contenteditable needs inline-block to sit with the icon */
+.bio-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== avatar pencil badge ===== */
+.avatar-wrap {
+  width: 128px; height: 128px; margin: 0 auto 1rem; position: relative;
+}
+
+.avatar-edit-badge {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  opacity: .9;
+  pointer-events: none; /* clicks go to the file input beneath */
+}
+
+.avatar-edit-badge svg { width: 16px; height: 16px; opacity: .7; }
+
+/* pop a little on hover */
+.avatar-wrap:hover .avatar-edit-badge { opacity: 1; }
+
 </style>
 
 <!-- Alpine runs init() on mount -->
 <div class="profile-shell" x-data="profileLinksEditor()" x-init="init()">
 
   <!-- Avatar -->
-  <div class="avatar-wrap">
-    <img
-      id="avatarPreview"
-      alt="Avatar"
-      src="{% if profile.profile_image %}{{ profile.profile_image.url }}{% else %}{% static 'images/logo.png' %}{% endif %}"
-      class="avatar"
-    >
-    <input type="file" name="profile_image" accept="image/*" @change="previewAvatar">
-  </div>
+<div class="avatar-wrap">
+  <img
+    id="avatarPreview"
+    alt="Avatar"
+    src="{% if profile.profile_image %}{{ profile.profile_image.url }}{% else %}{% static 'images/logo.png' %}{% endif %}"
+    class="avatar"
+  >
+  <input type="file" name="profile_image" accept="image/*" @change="previewAvatar">
+  <!-- visual overlay; clicks still reach the file input -->
+  <span class="avatar-edit-badge" aria-hidden="true" title="Change avatar">
+    <svg><use href="#icon-pencil"/></svg>
+  </span>
+</div>
+
 
   <!-- Display name -->
-  <h1 style="margin-top: 0.75rem;">
+<h1 style="margin-top: 0.75rem;">
+  <span class="editable-wrap">
     <input
       class="editable-text"
       type="text"
@@ -70,11 +139,15 @@
       placeholder="Your name"
       style="text-align:center;"
       @blur="saveProfile" />
-  </h1>
+    <svg class="edit-icon" aria-hidden="true"><use href="#icon-pencil"/></svg>
+  </span>
+</h1>
+
 
   <!-- Handle -->
   <div class="handle" style="display:flex; justify-content:center; align-items:center; margin-bottom:0.25rem; font-size:0.95rem; color:#6b7280;">
-    <span style="font-weight:500; line-height:1;" aria-hidden="true">@</span>
+  <span style="font-weight:500; line-height:1;" aria-hidden="true">@</span>
+  <span class="editable-wrap">
     <input
       class="editable-text"
       type="text"
@@ -85,12 +158,16 @@
       inputmode="latin" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="15"
       @input="onHandleInput($event)"
       @blur="saveProfile" />
-  </div>
+    <svg class="edit-icon" aria-hidden="true"><use href="#icon-pencil"/></svg>
+  </span>
+</div>
+
 
   <!-- Inline validation message for handle -->
   <p x-text="errors.handle" x-show="errors.handle" class="text-red-500 text-sm text-center mt-1" aria-live="polite"></p>
 
   <!-- Bio -->
+<div class="bio-wrap">
   <div
     class="bio editable-area"
     name="bio"
@@ -100,6 +177,9 @@
     @input="updateBioPlaceholder"
     @blur="saveProfile"
   >{{ profile.bio|default_if_none:'' }}</div>
+  <svg class="edit-icon" aria-hidden="true"><use href="#icon-pencil"/></svg>
+</div>
+
 
   <!-- Links list -->
   <div class="links" id="linksList">
