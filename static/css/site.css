@@ -676,3 +676,39 @@ article.profile nav.links { margin-top: .25rem; }
   color: var(--muted);
 }
 
+/* Make inline <svg class="edit-icon"> visible in dark mode */
+.edit-icon {
+  fill: var(--muted);     /* works with <use> content */
+  color: var(--muted);    /* for safety if you prefer currentColor */
+  opacity: .6;            /* a touch more visible than .45 */
+}
+
+/* On hover/focus, pop a bit */
+.editable-wrap:hover .edit-icon,
+.editable-wrap:focus-within .edit-icon,
+.bio-wrap:hover .edit-icon,
+.bio-wrap:focus-within .edit-icon {
+  fill: var(--text);
+  color: var(--text);
+  opacity: .95;
+}
+
+/* Make all inline icons follow the surrounding text color */
+.icon,
+.icon * {
+  fill: currentColor;   /* use the element's color for SVG fill */
+}
+
+/* Ensure the surrounding elements provide the right color */
+.copy-btn,
+.share-btn,
+.link-btn {
+  color: var(--text);   /* already set for buttons, add for link-btn just in case */
+}
+
+/* Optional: a little hover pop */
+.copy-btn:hover .icon,
+.share-btn:hover .icon,
+.link-btn:hover .icon {
+  opacity: .95;
+}
