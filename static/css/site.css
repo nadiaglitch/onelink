@@ -484,3 +484,23 @@ body.index-page .new-here .login-button-wrap {
 .jump input::placeholder {
   color: var(--muted);
 }
+
+/* ===== Login page (clean overrides) ===== */
+body.index-page .login-page {
+  max-width: 520px;       /* override older 400px */
+  margin: 0 auto;         /* override older 4rem auto */
+  padding: 2rem 1rem 3rem;
+  text-align: center;
+}
+
+/* Tighten heading in card header */
+.card-head h1 { margin: 0; }
+
+/* Error message block for login failures */
+.alert-error {
+  color: #b91c1c;
+  padding: .75rem;
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  background: rgba(185, 28, 28, .10);
+}
