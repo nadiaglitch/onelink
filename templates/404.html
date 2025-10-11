@@ -18,12 +18,4 @@
   </div>
 </section>
 
-<script>
-function gotoHandle() {
-  const v = (document.getElementById('handleLookup').value || '').trim().toLowerCase().replace(/^@/, '');
-  if (!v) return;
-  window.location.href = `/@${encodeURIComponent(v)}`;
-}
-</script>
-
 {% endblock %}

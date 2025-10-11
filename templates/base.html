@@ -32,33 +32,24 @@
         <ul>
           {% with viewname=request.resolver_match.url_name %}
             {% if request.user.is_authenticated %}
-              {# Index page: show nothing #}
               {% if viewname == 'index' %}
-                {# no nav items on index #}
-
-              {# Public profile (@handle) page: show Edit my profile + Log Out #}
+                <!-- no nav items on index -->
               {% elif viewname == 'profile-detail' %}
                 <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
                 <li><a href="{% url 'logout' %}">Log out</a></li>
-
-              {# Links editor page: show View public profile + Log Out #}
               {% elif viewname == 'link-list' %}
                 <li>
                   <a id="profile-link" data-profile-link href="{% url 'profile-detail' handle=request.user.profile.handle %}">View public profile</a>
                 </li>
                 <li><a href="{% url 'logout' %}">Log out</a></li>
-
-              {# Default for any other page when logged in #}
               {% else %}
                 <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
                 <li><a href="{% url 'logout' %}">Log out</a></li>
               {% endif %}
             {% else %}
-              {# Logged out: show a single context-aware link #}
               {% if viewname == 'register' %}
                 <li><a href="{% url 'index' %}">Sign in</a></li>
               {% else %}
-                {# index and login (and anything else) -> Register #}
                 <li><a href="{% url 'register' %}">Sign up</a></li>
               {% endif %}
             {% endif %}
@@ -66,76 +57,26 @@
         </ul>
       </nav>
     </div>
-
   </header>
 
   <main role="main">
-
-    <!-- Login Status Indicator -->
- <!-- Login Status UNDER nav -->
-  <div class="login-status-container">
-    <div class="login-status {% if request.user.is_authenticated %}logged-in{% else %}logged-out{% endif %}" aria-live="polite">
-      <span class="dot" aria-hidden="true"></span>
-      <span class="label">
-        {% if request.user.is_authenticated %}
-          Logged in
-        {% else %}
-          Logged out
-        {% endif %}
-      </span>
+    <div class="login-status-container">
+      <div class="login-status {% if request.user.is_authenticated %}logged-in{% else %}logged-out{% endif %}" aria-live="polite">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="label">
+          {% if request.user.is_authenticated %}
+            Logged in
+          {% else %}
+            Logged out
+          {% endif %}
+        </span>
+      </div>
     </div>
-  </div>
-      
+
     {% block content %}{% endblock %}
   </main>
 
-  <script>
-  (function(){
-    const btn = document.querySelector('.nav-toggle');
-    const nav = document.getElementById('site-nav');
-    if(!btn || !nav) return;
-
-    btn.addEventListener('click', () => {
-      const isOpen = nav.classList.toggle('open');
-      btn.setAttribute('aria-expanded', String(isOpen));
-    });
-
-    // Close on Escape
-    document.addEventListener('keydown', (e) => {
-      if(e.key === 'Escape' && nav.classList.contains('open')){
-        nav.classList.remove('open');
-        btn.setAttribute('aria-expanded', 'false');
-        btn.focus();
-      }
-    });
-  })();
-  </script>
-
-  <!-- Listen for profile:saved events to update navbar link(s) -->
-  <script>
-    window.addEventListener('profile:saved', (e) => {
-      try {
-        const handle = (e.detail && e.detail.handle || '').trim();
-        if (!handle) return;
-
-        const links = Array.from(document.querySelectorAll('#profile-link, a[data-profile-link]'));
-        if (!links.length) return;
-
-        links.forEach((a) => {
-          const oldHref = a.getAttribute('href') || a.href || '';
-          // Replace only the "/@<handle>" segment (up to next /, ? or #)
-          const newHref = oldHref.replace(/\/@[^\/?#]*/i, `/@${handle}`);
-          a.setAttribute('href', newHref === oldHref ? `/@${handle}` : newHref);
-        });
-
-        // Debug signal
-        console.log('[profile:saved] navbar link(s) updated to /@' + handle);
-      } catch (err) {
-        console.error('[profile:saved] failed to update navbar link', err);
-      }
-    });
-  </script>
-
   {% block modals %}{% endblock %}
+  <script src="{% static 'js/app.js' %}"></script>
 </body>
 </html>

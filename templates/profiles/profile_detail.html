@@ -21,56 +21,45 @@
 
     <div class="actions">
       <button class="copy-btn" type="button" aria-label="Copy profile link" data-action="copy-link">
-        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false" class="icon"><path d="M3 3h13a2 2 0 0 1 2 2v3h-2V5H5v14h3v2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm8 6h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2V11a2 2 0 0 1 2-2Zm0 2v10h8V11h-8Z"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false" class="icon">
+          <path d="M3 3h13a2 2 0 0 1 2 2v3h-2V5H5v14h3v2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm8 6h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2V11a2 2 0 0 1 2-2Zm0 2v10h8V11h-8Z"/>
+        </svg>
         Copy link
       </button>
       <a class="share-btn" href="mailto:?subject=Check%20out%20{{ profile.display_name|urlencode }}%27s%20OneLink&body={{ request.build_absolute_uri|urlencode }}" aria-label="Share via email">
-        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false" class="icon"><path d="M20 4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h16Zm0 2H4v.511l8 5.333 8-5.333V6Zm0 2.822-8 5.333-8-5.333V18h16V8.822Z"/></svg>
+        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false" class="icon">
+          <path d="M20 4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h16Zm0 2H4v.511l8 5.333 8-5.333V6Zm0 2.822-8 5.333-8-5.333V18h16V8.822Z"/>
+        </svg>
         Share
       </a>
     </div>
   </header>
 
-<nav class="links" aria-label="Profile Links">
-  <ul id="links" class="link-list">
-    {% for link in links %}
-      <li class="link-item">
-        <a class="link-btn"
-           href="{{ link.url }}"
-           target="_blank"
-           rel="noopener noreferrer"
-           role="button"
-           {% if link.title %}aria-label="{{ link.title }} (opens in new tab)"{% endif %}>
-          <span class="link-title">{{ link.title|default:link.url }}</span>
-          <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false" class="icon external">
-            <path d="M14 3h7v7h-2V6.414l-9.293 9.293-1.414-1.414L17.586 5H14V3ZM5 5h6v2H7v10h10v-4h2v6H5V5Z"/>
-          </svg>
-        </a>
-      </li>
-    {% empty %}
-      <li class="link-item empty" aria-live="polite">No links yet.</li>
-    {% endfor %}
-  </ul>
-</nav>
+  <nav class="links" aria-label="Profile Links">
+    <ul id="links" class="link-list">
+      {% for link in links %}
+        <li class="link-item">
+          <a class="link-btn"
+             href="{{ link.url }}"
+             target="_blank"
+             rel="noopener noreferrer"
+             role="button"
+             {% if link.title %}aria-label="{{ link.title }} (opens in new tab)"{% endif %}>
+            <span class="link-title">{{ link.title|default:link.url }}</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false" class="icon external">
+              <path d="M14 3h7v7h-2V6.414l-9.293 9.293-1.414-1.414L17.586 5H14V3ZM5 5h6v2H7v10h10v-4h2v6H5V5Z"/>
+            </svg>
+          </a>
+        </li>
+      {% empty %}
+        <li class="link-item empty" aria-live="polite">No links yet.</li>
+      {% endfor %}
+    </ul>
+  </nav>
 
   <footer class="profile-footer">
     <p>Made with OneLink</p>
   </footer>
 </article>
 
-<script>
-// Copy current URL
-document.addEventListener('DOMContentLoaded', function() {
-  const btn = document.querySelector('[data-action="copy-link"]');
-  if (btn) {
-    btn.addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(window.location.href);
-        btn.textContent = 'Copied!';
-        setTimeout(() => (btn.textContent = 'Copy link'), 1800);
-      } catch(e) { console.error(e); }
-    });
-  }
-});
-</script>
 {% endblock %}
