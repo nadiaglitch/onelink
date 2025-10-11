@@ -619,3 +619,60 @@ body.index-page .login-page {
 .text-center { text-align: center; }
 .mt-1 { margin-top: 0.25rem; }
 .muted { color: var(--muted); } /* used by <small class="muted">Edited</small> */
+
+/* ===============================
+   Public Profile (profile_detail)
+   =============================== */
+
+/* Round, pill-style action buttons */
+.copy-btn,
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .6rem .9rem;
+  border-radius: 9999px;
+  background: var(--btn);
+  color: var(--text);
+  border: 1px solid transparent;
+  font: inherit;
+  text-decoration: none;
+}
+.copy-btn:hover,
+.share-btn:hover {
+  background: var(--btn-hover);
+}
+
+/* Focus ring for interactive elements not using .btn */
+.copy-btn:focus-visible,
+.share-btn:focus-visible,
+.link-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* Small top spacing for the public profile links block only */
+article.profile nav.links { margin-top: .25rem; }
+
+/* Icon sizes used in buttons/links */
+.icon { width: 1.1rem; height: 1.1rem; flex: 0 0 auto; }
+.icon.external { opacity: .8; }
+
+/* Footer brand link style */
+.profile-footer { text-align: center; margin-top: .5rem; }
+.brand { color: var(--muted); text-decoration: none; }
+.brand:hover { text-decoration: underline; }
+
+/* Optional placeholder avatar style (fixes a typo from inline rules) */
+.avatar.placeholder {
+  width: 128px;
+  height: 128px;
+  border-radius: 9999px;
+  display: grid;
+  place-items: center;
+  font-size: 4rem;
+  font-weight: 700;
+  background: var(--btn);
+  color: var(--muted);
+}
+
