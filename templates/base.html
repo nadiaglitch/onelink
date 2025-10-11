@@ -34,23 +34,40 @@
           {% with viewname=request.resolver_match.url_name %}
             {% if request.user.is_authenticated %}
               {% if viewname == 'index' %}
-                <!-- no nav items on index -->
+                <!-- no nav items on index for logged-in users -->
               {% elif viewname == 'profile-detail' %}
-                <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
+                {% if profile and profile.handle == request.user.profile.handle %}
+                  <!-- Viewing own profile -->
+                  <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
+                {% else %}
+                  <!-- Viewing someone else's profile -->
+                  <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
+                  <li><a href="{% url 'profile-detail' handle=request.user.profile.handle %}">View my public profile</a></li>
+                {% endif %}
                 <li><a href="{% url 'logout' %}">Log out</a></li>
+
               {% elif viewname == 'link-list' %}
                 <li>
-                  <a id="profile-link" data-profile-link href="{% url 'profile-detail' handle=request.user.profile.handle %}">View public profile</a>
+                  <a id="profile-link" data-profile-link href="{% url 'profile-detail' handle=request.user.profile.handle %}">
+                    View public profile
+                  </a>
                 </li>
                 <li><a href="{% url 'logout' %}">Log out</a></li>
+
               {% else %}
                 <li><a href="{% url 'link-list' %}">Edit my profile</a></li>
                 <li><a href="{% url 'logout' %}">Log out</a></li>
               {% endif %}
             {% else %}
-              {% if viewname == 'register' %}
-                <li><a href="{% url 'index' %}">Sign in</a></li>
+              {% if viewname == 'index' %}
+                <!-- On index page (logged out) show only Sign up -->
+                <li><a href="{% url 'register' %}">Sign up</a></li>
+              {% elif viewname == 'login' %}
+                <li><a href="{% url 'register' %}">Sign up</a></li>
+              {% elif viewname == 'register' %}
+                <li><a href="{% url 'login' %}">Sign in</a></li>
               {% else %}
+                <li><a href="{% url 'login' %}">Sign in</a></li>
                 <li><a href="{% url 'register' %}">Sign up</a></li>
               {% endif %}
             {% endif %}
