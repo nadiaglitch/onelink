@@ -484,3 +484,138 @@ body.index-page .new-here .login-button-wrap {
 .jump input::placeholder {
   color: var(--muted);
 }
+
+/* ===== Login page (clean overrides) ===== */
+body.index-page .login-page {
+  max-width: 520px;       /* override older 400px */
+  margin: 0 auto;         /* override older 4rem auto */
+  padding: 2rem 1rem 3rem;
+  text-align: center;
+}
+
+/* Tighten heading in card header */
+.card-head h1 { margin: 0; }
+
+/* Error message block for login failures */
+.alert-error {
+  color: #b91c1c;
+  padding: .75rem;
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  background: rgba(185, 28, 28, .10);
+}
+
+/* ===============================
+   Profile Links Editor (dashboard)
+   =============================== */
+
+/* Shell */
+.profile-shell {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 2rem 1rem 6rem;
+  text-align: center;
+}
+
+/* Avatar container (scoped so it doesn't affect public profile) */
+.profile-shell .avatar-wrap {
+  width: 128px;
+  height: 128px;
+  margin: 0 auto 1rem;
+  position: relative;
+}
+.profile-shell .avatar-wrap img {
+  width: 128px;
+  height: 128px;
+  border-radius: 9999px;
+  object-fit: cover;
+}
+.profile-shell .avatar-wrap input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Editable inputs / areas */
+.editable-text {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  outline: none;
+}
+.editable-text:focus { outline: 2px dashed #9ca3af; outline-offset: 2px; }
+.editable-area[contenteditable="true"]:focus { outline: 2px dashed #9ca3af; outline-offset: 2px; }
+
+/* Placeholder for empty contenteditable bios */
+.editable-area[data-empty="true"]::before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+/* Page-specific tweaks moved from inline styles */
+.profile-shell h1 { margin-top: 0.75rem; }
+.profile-shell h1 .editable-text { text-align: center; }
+
+/* Handle row */
+.profile-shell .handle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: .25rem;
+  font-size: .95rem;
+  color: var(--muted);
+}
+.profile-shell .handle .editable-text {
+  text-align: center;
+  width: auto;
+  min-width: 6ch;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+}
+
+/* Links list + cards */
+.links { display: grid; gap: 10px; margin-top: 1.5rem; }
+.link-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  background: var(--card);
+}
+.link-guts { display: grid; gap: 6px; text-align: left; }
+.link-title { font-weight: 600; }
+.link-url { font-size: .9rem; color: var(--muted); word-break: break-all; }
+
+/* Actions */
+.link-actions { display: flex; gap: 8px; align-items: center; }
+.icon-btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #0b0f19;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.icon-btn[disabled] { opacity: .5; cursor: not-allowed; }
+
+/* Drag handle helper */
+.drag { cursor: grab; user-select: none; font-size: 18px; }
+.drag:active { cursor: grabbing; }
+
+/* Utilities used by the template */
+.hidden { display: none !important; }
+.text-red-500 { color: #ef4444; }
+.text-sm { font-size: 0.875rem; }
+.text-center { text-align: center; }
+.mt-1 { margin-top: 0.25rem; }
+.muted { color: var(--muted); } /* used by <small class="muted">Edited</small> */
