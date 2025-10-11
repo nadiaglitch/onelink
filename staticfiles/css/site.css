@@ -411,3 +411,76 @@ body.index-page .new-here .login-button-wrap {
       max-width: 72ch;
     }
     .login-button-wrap { display: flex; gap: .5rem; align-items: center; margin-top: .75rem; flex-wrap: wrap; }
+
+  /* ===============================
+   Error Pages (403 / 404 / 500)
+   =============================== */
+
+/* Container & layout */
+.nf-shell {
+  max-width: 640px;
+  margin: 3rem auto;
+  padding: 1.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh; /* vertical centering */
+}
+
+/* Card */
+.nf-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+}
+
+/* Typography */
+.nf-title {
+  font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+  margin-bottom: 0.75rem;
+}
+
+.nf-text {
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+}
+
+/* CTA group */
+.cta {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+/* Improve button focus visibility (keeps your existing btn styles) */
+.btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* 404 “Jump to @handle” form */
+.jump {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.jump input {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 0.6rem;
+  min-width: 240px;
+}
+
+.jump input::placeholder {
+  color: var(--muted);
+}

@@ -79,8 +79,11 @@ WSGI_APPLICATION = 'onelink.wsgi.application'
 
 STORAGES = {
     "default": {"BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"},
-    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
+
+# Only keep hashed files after collectstatic (avoids duplicates)
+WHITENOISE_KEEP_ONLY_HASHED_FILES = True
 
 # Database
 DATABASES = {
