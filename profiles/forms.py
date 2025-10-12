@@ -30,8 +30,14 @@ class ProfileForm(forms.ModelForm):
 class LinkForm(forms.ModelForm):
     class Meta:
         model = Link
-        fields = ["title", "url"]  # position edited via drag/drop, not here
+        fields = ["title", "url"]
         widgets = {
-            "title": forms.TextInput(attrs={"placeholder": "Display title"}),
-            "url": forms.URLInput(attrs={"placeholder": "https://example.com"}),
+            "title": forms.TextInput(attrs={
+                "class": "editable-text link-title",
+                "placeholder": "Display title",
+            }),
+            "url": forms.URLInput(attrs={
+                "class": "editable-text link-url",
+                "placeholder": "https://example.com",
+            }),
         }

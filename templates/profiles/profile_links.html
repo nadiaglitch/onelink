@@ -8,16 +8,17 @@
   </symbol>
 </svg>
 
-{# Real form so non-JS fallback still works #}
+<!-- Real form so non-JS fallback still works -->
 <form class="profile-shell"
       action=""
       method="post"
       enctype="multipart/form-data"
       x-data="profileLinksEditor()"
-      x-init="init()">
+      x-init="init()"
+      novalidate>
   {% csrf_token %}
 
-  <!-- Avatar (full width shell but visually centered) -->
+  <!-- Avatar -->
   <div class="avatar-wrap">
     <img
       id="avatarPreview"
@@ -31,7 +32,7 @@
     </span>
   </div>
 
-  <!-- Display name (uniform width) -->
+  <!-- Display name -->
   <div class="editor-row">
     <h1 class="editor-title">
       <span class="editable-wrap editable-surface editor-surface">
@@ -47,7 +48,7 @@
     </h1>
   </div>
 
-  <!-- Handle (uniform width, '@' inside the surface) -->
+  <!-- Handle -->
   <div class="editor-row">
     <div class="editable-wrap editable-surface editor-surface">
       <span class="prefix-at" aria-hidden="true">@</span>
@@ -65,69 +66,123 @@
     <p x-text="errors.handle" x-show="errors.handle" class="text-red-500 text-sm text-center mt-1" aria-live="polite"></p>
   </div>
 
-  <!-- Bio (uniform width, icon inside the same surface) -->
+  <!-- Bio -->
   <div class="editor-row">
     <div class="editable-wrap editable-surface editor-surface editor-bio">
       <div
         class="bio editable-area"
-        name="bio"
         contenteditable="true"
         data-placeholder="Write your bio here"
-        x-ref="bio"
+        x-ref="bioEditable"
         @input="updateBioPlaceholder"
         @blur="saveProfile"
+        x-init="$nextTick(() => { 
+          const t = ($refs.bioEditable.textContent || '').trim();
+          $refs.bioEditable.dataset.empty = String(t.length === 0);
+        })"
       >{{ profile.bio|default_if_none:'' }}</div>
+
+      <!-- Hidden field that actually submits to Django -->
+      <textarea name="bio" x-ref="bioField" class="hidden" aria-hidden="true"></textarea>
+
       <svg class="edit-icon" aria-hidden="true"><use href="#icon-pencil"/></svg>
     </div>
   </div>
 
-  <!-- Links list (uniform width) -->
+  <!-- Links list -->
   <div class="editor-row">
-    <div class="links" id="linksList">
-      {% if formset.management_form %}{{ formset.management_form }}{% endif %}
-      {% for f in formset %}
-        {% with pk=f.instance.pk title_val=f.instance.title url_val=f.instance.url %}
-        <div class="link-card" data-id="{{ pk }}">
+    <div class="links" id="linksList" data-formset-container>
+      {{ formset.management_form }}
+
+      {% for f in formset.forms %}
+        {% with idx=forloop.counter0 %}
+        <div class="link-card" data-form-row data-form-index="{{ idx }}" data-id="{{ f.instance.pk|default_if_none:'' }}">
+          <!-- Required hidden fields so Django can map updates -->
+          {{ f.id }}
+          <div class="sr-only">
+            {{ f.ORDER }}
+            {{ f.DELETE }}
+          </div>
+
           <div class="link-guts">
-            <input
-              class="editable-text link-title"
-              type="text"
-              value="{{ title_val|default:url_val }}"
-              placeholder="Display title"
-              data-field="title"
-              data-original="{{ title_val|default:url_val }}"
-              @blur="onLinkFieldBlur($event)">
-            <input
-              class="editable-text link-url"
-              type="url"
-              value="{{ url_val }}"
-              placeholder="https://example.com"
-              data-field="url"
-              data-original="{{ url_val }}"
-              @blur="onLinkFieldBlur($event)">
+            <div class="field-wrap">
+              {{ f.title }}
+              {% if f.title.errors %}
+                <small class="text-red-500">{{ f.title.errors|join:", " }}</small>
+              {% endif %}
+            </div>
+
+            <div class="field-wrap">
+              {{ f.url }}
+              {% if f.url.errors %}
+                <small class="text-red-500">{{ f.url.errors|join:", " }}</small>
+              {% endif %}
+            </div>
+
             <small class="muted hidden" data-edited-pill>Edited</small>
           </div>
+
           <div class="link-actions">
-            <button type="button" class="icon-btn" @click="deleteLink($event)" title="Delete" {% if not pk %}disabled{% endif %}>Delete</button>
+            {% if f.instance.pk %}
+              <!-- Saved row -> show Delete -->
+              <button
+                type="button"
+                class="icon-btn"
+                title="Delete"
+                @click="deleteLink($event)"
+              >
+                <span>Delete</span>
+              </button>
+            {% else %}
+              <!-- Blank/unsaved row -> show Add link -->
+              <button
+                type="button"
+                class="icon-btn"
+                title="Add link"
+                @click="addLink()"
+              > +  Add</button>
+            {% endif %}
           </div>
         </div>
         {% endwith %}
       {% empty %}
-        <p>No links yet — add your first one below.</p>
+        <p>No links yet — start by filling the blank row below.</p>
       {% endfor %}
     </div>
 
-    <!-- Add new link -->
-    <div class="link-card" style="margin-top: 10px;">
-      <div class="link-guts">
-        <input class="editable-text link-title" type="text" placeholder="Display title" id="newTitle">
-        <input class="editable-text link-url" type="url" placeholder="https://example.com" id="newUrl">
+    <!-- Template for dynamically added rows (Django's __prefix__ placeholders). -->
+    <template id="empty-form-template">
+      <div class="link-card" data-form-row data-id="">
+        {{ formset.empty_form.id }}
+        <div class="sr-only">
+          {{ formset.empty_form.ORDER }}
+          {{ formset.empty_form.DELETE }}
+        </div>
+
+        <div class="link-guts">
+          <div class="field-wrap">
+            {{ formset.empty_form.title }}
+          </div>
+          <div class="field-wrap">
+            {{ formset.empty_form.url }}
+          </div>
+          <small class="muted hidden" data-edited-pill>Edited</small>
+        </div>
+
+        <div class="link-actions">
+          <button
+            type="button"
+            class="icon-btn"
+            title="Add link"
+            @click="addLink()"
+          >Add link</button>
+        </div>
       </div>
-      <div class="link-actions">
-        <button type="button" class="icon-btn" @click="createLink">Add</button>
-      </div>
-    </div>
+    </template>
   </div>
 
+</form>
+
+<!-- Alpine (defer) -->
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 {% endblock %}

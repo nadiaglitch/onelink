@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views as profile_views
+from profiles.views import ProfileLoginView, ProfileLogoutView
 
 urlpatterns = [
     path("", profile_views.index, name="index"),
@@ -11,4 +12,6 @@ urlpatterns = [
     path("links/<int:pk>/edit/", profile_views.LinkUpdateView.as_view(), name="link-update"),
     path("links/<int:pk>/delete/", profile_views.LinkDeleteView.as_view(), name="link-delete"),
     path("@<str:handle>", profile_views.public_profile, name="profile-detail"),
+    path("accounts/login/",  ProfileLoginView.as_view(),  name="login"),
+    path("accounts/logout/", ProfileLogoutView.as_view(), name="logout"),
 ]

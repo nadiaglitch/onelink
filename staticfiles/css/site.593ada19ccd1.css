@@ -256,6 +256,47 @@ body.index-page .new-here .login-button-wrap {
 .page-header{display:grid;gap:.5rem}
 .alerts{display:grid;gap:.5rem}
 .alert{border:1px solid var(--border);padding:.75rem .9rem;border-radius:.75rem;background:var(--card)}
+
+/* Messages: variant styles for Django tags */
+.alert.success {
+  border-color: #16a34a1f;            /* subtle green border */
+  background: rgba(22, 163, 74, .12); /* green tint */
+  color: #16a34a;                     /* readable on both themes */
+}
+
+.alert.info {
+  border-color: #2563eb1f;
+  background: rgba(37, 99, 235, .12);
+  color: #2563eb;
+}
+
+.alert.warning {
+  border-color: #f59e0b1f;
+  background: rgba(245, 158, 11, .14);
+  color: #b45309;
+}
+
+.alert.error {
+  border-color: #b91c1c1f;
+  background: rgba(185, 28, 28, .12);
+  color: #b91c1c;
+}
+
+/* Optional: links inside messages */
+.alert a {
+  font-weight: 600;
+  text-decoration: underline;
+  color: inherit;
+}
+
+/* Optional: spacing so banners don’t hug the edges on small screens */
+.alerts {
+  margin: 0 1rem 1rem;
+}
+@media (min-width: 768px) {
+  .alerts { margin: 0 auto 1rem; max-width: 800px; }
+}
+
 .editor-grid{display:grid;gap:1rem;grid-template-columns:1.1fr 1.4fr 1fr}
 @media (max-width:1024px){.editor-grid{grid-template-columns:1fr}}
 .card{

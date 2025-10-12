@@ -1,10 +1,12 @@
 import json
+import re
+from django.db.models import F
 from django.views.decorators.http import require_POST
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib import messages
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
@@ -17,7 +19,12 @@ from .models import Profile, Link
 from .forms import ProfileForm, LinkForm
 
 LinkFormSet = inlineformset_factory(
-    Profile, Link, form=LinkForm, extra=0, can_delete=True
+    Profile,
+    Link,
+    form=LinkForm,
+    extra=1,          # give one blank row to create a new link
+    can_delete=True,
+    can_order=True    # you sort by ORDER in your view; enable it in the formset
 )
 
 def _ensure_profile_for(user):
@@ -27,10 +34,29 @@ def _ensure_profile_for(user):
     )
 
 class ProfileLoginView(LoginView):
+    def form_valid(self, form):
+        messages.success(self.request, "You are now logged in")
+        return super().form_valid(form)
+
     def get_success_url(self):
         user = self.request.user
         profile, _ = _ensure_profile_for(user)
         return profile.get_absolute_url()
+
+class ProfileLogoutView(LogoutView):
+    # Optional: set a default next page, otherwise LOGOUT_REDIRECT_URL is used
+    # next_page = reverse_lazy("index")
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)  # this performs logout (session flush)
+        messages.success(request, "You are now logged out")  # add message after logout
+        return response
+
+    # Many apps use GET for logout (link click). Support that too:
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        messages.success(request, "You are now logged out")
+        return response
 
 def index(request):
     if request.user.is_authenticated:
@@ -53,6 +79,23 @@ class OwnerRequiredMixin(UserPassesTestMixin):
             return getattr(self.object.profile, "user_id", None) == self.request.user.id
         return self.request.user.is_authenticated
 
+# ---------- Option A helper ----------
+
+def _is_real_formset_submission(post):
+    """
+    True if POST contains any inline formset field beyond the management keys,
+    regardless of the formset prefix (e.g., 'link_set-0-url', 'form-1-DELETE').
+    """
+    mgmt_suffixes = {"TOTAL_FORMS", "INITIAL_FORMS", "MIN_NUM_FORMS", "MAX_NUM_FORMS"}
+    for k in post.keys():
+        # matches "<prefix>-<number>-<field>"
+        if re.match(r'^[^-]+-\d+-', k):
+            last = k.rsplit("-", 1)[-1]
+            if last not in mgmt_suffixes:
+                return True
+    return False
+# ------------------------------------
+
 class ProfileLinksEditorView(LoginRequiredMixin, View):
     template_name = "profiles/profile_links.html"
 
@@ -66,11 +109,19 @@ class ProfileLinksEditorView(LoginRequiredMixin, View):
         profile, _ = _ensure_profile_for(request.user)
         pform = ProfileForm(request.POST, request.FILES, instance=profile)
 
-        if "form-TOTAL_FORMS" in request.POST:
-            formset = LinkFormSet(request.POST, instance=profile, queryset=profile.links.order_by("position", "id"))
+        # Bind the formset ONLY if there are real link fields present (not just management form)
+        if _is_real_formset_submission(request.POST):
+            formset = LinkFormSet(
+                request.POST,
+                instance=profile,
+                queryset=profile.links.order_by("position", "id"),
+            )
             formset_valid = formset.is_valid()
         else:
-            formset = LinkFormSet(instance=profile, queryset=profile.links.order_by("position", "id"))
+            formset = LinkFormSet(
+                instance=profile,
+                queryset=profile.links.order_by("position", "id"),
+            )
             formset_valid = True
 
         if not (pform.is_valid() and formset_valid):
@@ -78,20 +129,42 @@ class ProfileLinksEditorView(LoginRequiredMixin, View):
             return render(request, self.template_name, {"pform": pform, "formset": formset, "profile": profile})
 
         with transaction.atomic():
-            pform.save()
-            if "form-TOTAL_FORMS" in request.POST:
-                for obj in formset.deleted_objects:
-                    obj.delete()
-                cleaned = [f for f in formset.forms if f.cleaned_data and not f.cleaned_data.get("DELETE")]
-                ordered_forms = sorted(cleaned, key=lambda f: f.cleaned_data.get("ORDER", 0))
+            profile = pform.save()
+
+            if _is_real_formset_submission(request.POST):
+                # Populate formset.deleted_objects
+                instances = formset.save(commit=False)
+
+                # 1) Delete the ones ticked for deletion
+                to_delete = [obj for obj in getattr(formset, "deleted_objects", []) if obj.pk]
+                if to_delete:
+                    # delete now so they don't collide when we re-number
+                    for obj in to_delete:
+                        obj.delete()
+
+                # 2) Bump positions for remaining rows to avoid unique collisions
+                Link.objects.filter(profile=profile).update(position=F('position') + 1000)
+
+                # 3) Save the forms we are keeping, in the requested order, with final positions
+                cleaned_forms = [
+                    f for f in formset.forms
+                    if f.cleaned_data and not f.cleaned_data.get("DELETE")
+                ]
+                ordered_forms = sorted(cleaned_forms, key=lambda f: f.cleaned_data.get("ORDER") or 0)
+
                 for idx, f in enumerate(ordered_forms, start=1):
                     link = f.save(commit=False)
                     link.profile = profile
                     link.position = idx
                     link.save()
 
-        messages.success(request, "Profile & links updated.")
-        return redirect("link-list")
+                # If you ever add M2M on Link, call: formset.save_m2m()
+
+
+
+        messages.success(request, "Profile updated.")
+        # Redirect back to the editor so the success banner renders there
+        return redirect(request.path)
 
 class LinkListView(LoginRequiredMixin, ListView):
     model = Link
@@ -108,8 +181,9 @@ class LinkCreateView(LoginRequiredMixin, CreateView):
     template_name = "profiles/link_form.html"
     success_url = reverse_lazy("link-list")
     def form_valid(self, form):
-        form.instance.profile = self.request.user.profile
-        return super().form_valid(form)
+        resp = super().form_valid(form)
+        messages.success(self.request, "Link created.")
+        return resp
 
 class LinkUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
     model = Link
@@ -120,6 +194,10 @@ class LinkUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
         obj = super().get_object(queryset)
         self.object = obj
         return obj
+    def form_valid(self, form):
+        resp = super().form_valid(form)
+        messages.success(self.request, "Link updated.")
+        return resp
 
 class LinkDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
     model = Link
@@ -129,6 +207,10 @@ class LinkDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
         obj = super().get_object(queryset)
         self.object = obj
         return obj
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, "Link deleted.")
+        return super().delete(request, *args, **kwargs)
 
 def register(request):
     if request.method == "POST":

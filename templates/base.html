@@ -91,6 +91,14 @@
       </div>
     </div>
 
+    {% if messages %}
+      <div class="alerts" role="region" aria-live="polite">
+        {% for message in messages %}
+          <div class="alert {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
     {% block content %}{% endblock %}
   </main>
 
