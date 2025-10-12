@@ -36,7 +36,9 @@
 
   <div id="status" class="sr-only" aria-live="polite"></div>
 
-  <ol id="links" class="link-list" aria-label="Your links">
+  <!-- Reorder-enabled list -->
+  <ol id="links" class="link-list" aria-label="Your links"
+      data-reorder-url="{% url 'link-reorder' %}">
     {% for link in links %}
       <li class="row" data-id="{{ link.id }}" tabindex="0" aria-roledescription="Draggable link">
         <div class="cell drag-handle" title="Drag to reorder" aria-hidden="true">⋮⋮</div>

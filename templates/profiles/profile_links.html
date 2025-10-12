@@ -8,7 +8,15 @@
   </symbol>
 </svg>
 
-<div class="profile-shell" x-data="profileLinksEditor()" x-init="init()">
+{# Real form so non-JS fallback still works #}
+<form class="profile-shell"
+      action=""
+      method="post"
+      enctype="multipart/form-data"
+      x-data="profileLinksEditor()"
+      x-init="init()">
+  {% csrf_token %}
+
   <!-- Avatar -->
   <div class="avatar-wrap">
     <img
@@ -25,7 +33,7 @@
 
   <!-- Display name -->
   <h1>
-    <span class="editable-wrap">
+    <span class="editable-wrap editable-surface">
       <input
         class="editable-text"
         type="text"
@@ -40,7 +48,7 @@
   <!-- Handle -->
   <div class="handle">
     <span style="font-weight:500; line-height:1;" aria-hidden="true">@</span>
-    <span class="editable-wrap">
+    <span class="editable-wrap editable-surface">
       <input
         class="editable-text"
         type="text"
@@ -57,10 +65,10 @@
   <!-- Inline validation message for handle -->
   <p x-text="errors.handle" x-show="errors.handle" class="text-red-500 text-sm text-center mt-1" aria-live="polite"></p>
 
-  <!-- Bio -->
-  <div class="bio-wrap">
+  <!-- Bio (now has the same white “input” surface) -->
+  <div class="bio-wrap" style="width:100%; justify-content:center;">
     <div
-      class="bio editable-area"
+      class="bio editable-area editable-surface"
       name="bio"
       contenteditable="true"
       data-placeholder="Write your bio here"
@@ -116,8 +124,13 @@
       <button type="button" class="icon-btn" @click="createLink">Add</button>
     </div>
   </div>
-</div>
+
+  <!-- Save toolbar -->
+  <div class="toolbar" style="margin-top:1rem">
+    <button class="btn primary" type="submit" @click.prevent="saveProfile($event)">Save changes</button>
+    <a class="btn outline" href="{% url 'profile-detail' request.user.profile.handle %}">View public profile</a>
+  </div>
+</form>
 
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
 {% endblock %}
