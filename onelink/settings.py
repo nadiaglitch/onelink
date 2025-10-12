@@ -82,6 +82,8 @@ STORAGES = {
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
 
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
 # Only keep hashed files after collectstatic (avoids duplicates)
 WHITENOISE_KEEP_ONLY_HASHED_FILES = True
 
@@ -132,8 +134,8 @@ CLOUDINARY_STORAGE = {
     "API_SECRET": os.environ.get("CLOUDINARY_API_SECRET"),
 }
 
-# Auth redirects
-LOGIN_URL = "/accounts/login/"
-# Send users to the links editor after login. If you prefer something else, use a URL name you have.
+# Make reverse() for login go to our custom view if used anywhere else
+LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "post-login-redirect"
-LOGOUT_REDIRECT_URL = "/"
+# After logout, we already send a message and redirect to index
+LOGOUT_REDIRECT_URL = "index"

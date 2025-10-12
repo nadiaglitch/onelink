@@ -2,7 +2,7 @@ import json
 import re
 from django.db.models import F
 from django.views.decorators.http import require_POST
-from django.contrib.auth import login
+from django.contrib.auth import login, logout  
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
@@ -34,30 +34,30 @@ def _ensure_profile_for(user):
     )
 
 class ProfileLoginView(LoginView):
+    """
+    Uses your index page form posting to 'login'.
+    Success redirect is controlled by Django (next=..., or settings.LOGIN_REDIRECT_URL),
+    which in your project points to 'post-login-redirect'.
+    """
     def form_valid(self, form):
         messages.success(self.request, "You are now logged in")
         return super().form_valid(form)
 
-    def get_success_url(self):
-        user = self.request.user
-        profile, _ = _ensure_profile_for(user)
-        return profile.get_absolute_url()
-
-class ProfileLogoutView(LogoutView):
-    # Optional: set a default next page, otherwise LOGOUT_REDIRECT_URL is used
-    # next_page = reverse_lazy("index")
+class ProfileLogoutView(View):
+    """
+    Explicitly log the user out, then add the message, then redirect to index.
+    Doing it ourselves avoids any ordering issues with session/message storage.
+    """
+    def get(self, request, *args, **kwargs):
+        logout(request)  # flushes session
+        messages.success(request, "You are now logged out")
+        return redirect("index")
 
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)  # this performs logout (session flush)
-        messages.success(request, "You are now logged out")  # add message after logout
-        return response
-
-    # Many apps use GET for logout (link click). Support that too:
-    def get(self, request, *args, **kwargs):
-        response = super().get(request, *args, **kwargs)
+        logout(request)
         messages.success(request, "You are now logged out")
-        return response
-
+        return redirect("index")
+    
 def index(request):
     if request.user.is_authenticated:
         profile, _ = _ensure_profile_for(request.user)
@@ -80,7 +80,6 @@ class OwnerRequiredMixin(UserPassesTestMixin):
         return self.request.user.is_authenticated
 
 # ---------- Option A helper ----------
-
 def _is_real_formset_submission(post):
     """
     True if POST contains any inline formset field beyond the management keys,
@@ -138,7 +137,6 @@ class ProfileLinksEditorView(LoginRequiredMixin, View):
                 # 1) Delete the ones ticked for deletion
                 to_delete = [obj for obj in getattr(formset, "deleted_objects", []) if obj.pk]
                 if to_delete:
-                    # delete now so they don't collide when we re-number
                     for obj in to_delete:
                         obj.delete()
 
@@ -157,10 +155,7 @@ class ProfileLinksEditorView(LoginRequiredMixin, View):
                     link.profile = profile
                     link.position = idx
                     link.save()
-
-                # If you ever add M2M on Link, call: formset.save_m2m()
-
-
+                # If you add M2M on Link in future: formset.save_m2m()
 
         messages.success(request, "Profile updated.")
         # Redirect back to the editor so the success banner renders there
@@ -237,3 +232,7 @@ def public_profile(request, handle):
     profile = get_object_or_404(Profile, handle=handle.lower())
     links = profile.links.order_by("position", "id")
     return render(request, "profiles/profile_detail.html", {"profile": profile, "links": links})
+
+def debug_msg(request):
+    messages.success(request, "Hello from messages framework!")
+    return redirect("index") 
