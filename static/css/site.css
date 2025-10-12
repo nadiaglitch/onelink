@@ -277,7 +277,7 @@ body.index-page .new-here .login-button-wrap {
    =============================== */
 @media (max-width:640px){
   .link-list.editable .row{grid-template-columns:32px 1fr}
-  .actions{grid-column:1 / -1;justify-content:flex-end}
+  .actions{grid-column:1 / -1;justify-content:center}
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -296,6 +296,13 @@ body.index-page .new-here .login-button-wrap {
 
 /* give breathing room after the last link */
 .links { margin-bottom: 1.0rem; }
+
+@media (max-width: 600px) {
+  .links
+ {
+    padding: 3rem;
+  }
+}
 
 /* toolbar matches site background and isn’t sticky */
 .toolbar {

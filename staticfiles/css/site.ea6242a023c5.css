@@ -5,27 +5,11 @@
   --bg:#0d0d0d; --card:#1a1a1a; --text:#fff; --muted:#c7c7c7;
   --accent:#34d399; --btn:#2a2a2a; --btn-hover:#3a3a3a;
   --focus:#f59e0b; --border:rgba(255,255,255,.12);
-
-  /* ✨ Contrast upgrades (new tokens) */
-  --text-strong:#ffffff;
-  --muted-strong:#e5e7eb;
-  --border-strong:rgba(255,255,255,.32);
-  --shadow-strong:0 10px 22px rgba(0,0,0,.45);
-  --surface-raise:#222222;
-  --surface-raise-2:#262626;
 }
 @media (prefers-color-scheme: light){
   :root {
     --bg:#f8fafc; --card:#fff; --text:#0b0f19; --muted:#475569;
     --btn:#f1f5f9; --btn-hover:#e2e8f0; --border:rgba(2,6,23,.12);
-
-    /* ✨ Contrast upgrades (light) */
-    --text-strong:#0b0f19;
-    --muted-strong:#334155;
-    --border-strong:rgba(2,6,23,.28);
-    --shadow-strong:0 10px 22px rgba(2,6,23,.10);
-    --surface-raise:#f4f6f9;
-    --surface-raise-2:#eef2f6;
   }
 }
 html{scroll-behavior:smooth}
@@ -61,6 +45,7 @@ body{background:var(--bg);color:var(--text);margin:0}
 .nav-links a[aria-current="page"]{outline:2px solid var(--border)}
 
 /* Mobile toggle */
+/* Mobile toggle */
 .nav-toggle {
   display: none;
   width: 40px;
@@ -70,21 +55,26 @@ body{background:var(--bg);color:var(--text);margin:0}
   background: var(--card);
   align-items: center;
   justify-content: center;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: column;      /* 👈 stack bars vertically */
+  gap: 4px;                    /* space between bars */
   padding: 0;
-  cursor: pointer;
+  cursor: pointer;             /* optional: makes it clickable */
 }
+
 .nav-toggle .bar {
   display: block;
   width: 20px;
   height: 2px;
   background: var(--text);
-  border-radius: 1px;
-  transition: all 0.3s ease;
+  border-radius: 1px;          /* smoother ends */
+  transition: all 0.3s ease;   /* optional: smooth animation */
 }
+
 @media (max-width: 768px) {
-  .nav-toggle { display: inline-flex; }
+  .nav-toggle {
+    display: inline-flex;      /* 👈 shows toggle only on mobile */
+  }
+
   .nav-links {
     position: absolute;
     right: 1.25rem;
@@ -92,14 +82,25 @@ body{background:var(--bg);color:var(--text);margin:0}
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 0.8rem;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
     padding: 0.5rem;
     display: none;
   }
-  .nav-links.open { display: block; }
-  .nav-links ul { display: grid; gap: 0.25rem; }
-  .nav-links a { display: block; }
+
+  .nav-links.open {
+    display: block;
+  }
+
+  .nav-links ul {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .nav-links a {
+    display: block;
+  }
 }
+
 
 /* =========================================
    Shared Button Styles
@@ -109,7 +110,7 @@ body{background:var(--bg);color:var(--text);margin:0}
 .btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center; /* centers text */
   gap: .35rem;
   padding: .6rem 1.5rem;
   border-radius: .75rem;
@@ -123,7 +124,10 @@ body{background:var(--bg);color:var(--text);margin:0}
   cursor: pointer;
   transition: background .15s ease, transform .12s ease;
 }
-.btn:hover { background: rgba(255,255,255,.06); }
+
+.btn:hover {
+  background: rgba(255,255,255,.06);
+}
 
 /* Green primary button (Sign In, Create Account) */
 .btn.primary {
@@ -131,7 +135,10 @@ body{background:var(--bg);color:var(--text);margin:0}
   border: none;
   color: #0b0f19;
 }
-.btn.primary:hover { background: #2ec08d; }
+
+.btn.primary:hover {
+  background: #2ec08d; /* slightly darker green */
+}
 
 /* Grey secondary button (Register, Cancel) */
 .btn.secondary {
@@ -139,7 +146,11 @@ body{background:var(--bg);color:var(--text);margin:0}
   border: none;
   color: #0b0f19;
 }
-.btn.secondary:hover { background: #cbd5e1; }
+
+.btn.secondary:hover {
+  background: #cbd5e1; /* darker grey on hover */
+}
+
 
 /* ===============================
    Forms (global)
@@ -172,16 +183,27 @@ body.index-page form > div{display:grid;gap:.4rem}
 body.index-page .login-button-wrap{display:flex;justify-content:center;margin-top:1.2rem}
 
 /* Center "New here?" label and Register button on index page */
-body.index-page .new-here { text-align: center; margin-top: 1rem; }
-body.index-page .new-here label {
-  display: block; font-weight: 600; margin-bottom: 0.4rem; color: var(--text);
+body.index-page .new-here {
+  text-align: center;
+  margin-top: 1rem;        /* add some spacing above */
 }
-body.index-page .new-here .login-button-wrap { justify-content: center; }
+
+body.index-page .new-here label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;   /* small gap before the button */
+  color: var(--text);      /* consistent text color */
+}
+
+body.index-page .new-here .login-button-wrap {
+  justify-content: center; /* centers the Register button */
+}
+
 
 /* ===============================
    Modal (register)
    =============================== */
-.modal[hidden], .modal-backdrop[hidden]{display:none !important}
+.modal[hidden], .modal-backdrop[hidden]{display:none !important} /* ensure hidden means hidden */
 .modal-backdrop{
   position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.55);
   backdrop-filter:blur(2px);z-index:9998;
@@ -198,12 +220,12 @@ body.index-page .new-here .login-button-wrap { justify-content: center; }
   position:relative;display:flex;align-items:center;justify-content:center;
   padding-top:.5rem;margin-bottom:.5rem;
 }
-.modal-head .close-btn{
+.modal-head .close-btn{ /* “X” in top-right */
   position:absolute;top:.5rem;right:.75rem;background:transparent;border:none;
   color:var(--muted);font-size:1.4rem;line-height:1;cursor:pointer;
 }
 .modal-head .close-btn:hover{color:var(--text)}
-.modal-foot{display:grid;gap:.5rem}
+.modal-foot{display:grid;gap:.5rem} /* stack Create + Cancel vertically */
 
 /* ===============================
    Profile (public)
@@ -257,122 +279,290 @@ body.index-page .new-here .login-button-wrap { justify-content: center; }
   .link-list.editable .row{grid-template-columns:32px 1fr}
   .actions{grid-column:1 / -1;justify-content:flex-end}
 }
+
 @media (prefers-reduced-motion: reduce){
   *{transition:none !important;animation:none !important}
 }
+
 @media (max-width: 480px) {
-  .card-foot { flex-direction: column !important; }
-  .card-foot .btn { width: 100% !important; }
+  .card-foot {
+    flex-direction: column !important;
+  }
+  .card-foot .btn {
+    width: 100% !important;
+  }
+}
+/* --- overrides to match global button + background styles --- */
+
+/* give breathing room after the last link */
+.links { margin-bottom: 1.0rem; }
+
+@media (max-width: 600px) {
+  .links {
+    padding: 0 1rem;
+  }
 }
 
-/* --- overrides to match global button + background styles --- */
-.links { margin-bottom: 1.0rem; }
+/* toolbar matches site background and isn’t sticky */
 .toolbar {
-  position: static;
-  background: transparent;
+  position: static;                 /* no sticky bar */
+  background: transparent;          /* same as site background */
   backdrop-filter: none;
   border-top: none;
-  padding: 0;
-  margin-top: 1.5rem;
+  padding: 0;                       /* rely on button padding */
+  margin-top: 1.5rem;               /* space above the buttons */
   display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap;
 }
+
 /* Editor toolbar – match page background */
 .profile-shell .toolbar {
-  background: var(--bg);
-  position: static;
+  background: var(--bg);      /* same as body background */
+  position: static;           /* not sticky */
   backdrop-filter: none;
   border-top: none;
   padding: 0;
-  margin-top: 1.5rem;
+  margin-top: 1.5rem;         /* space above buttons */
 }
 
 /* ===== edit icon styling ===== */
-.editable-wrap { position: relative; display: inline-flex; align-items: center; gap: 6px; }
-.edit-icon { width: 16px; height: 16px; opacity: .45; flex: 0 0 auto; transition: opacity .15s ease; }
+.editable-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-icon {
+  width: 16px;
+  height: 16px;
+  opacity: .45;
+  flex: 0 0 auto;
+  transition: opacity .15s ease;
+}
+
+/* show pencil on hover/focus or when the field has value */
 .editable-wrap:hover .edit-icon,
-.editable-wrap:focus-within .edit-icon { opacity: .9; }
+.editable-wrap:focus-within .edit-icon {
+  opacity: .9;
+}
+
 /* contenteditable needs inline-block to sit with the icon */
-.bio-wrap { display: inline-flex; align-items: center; gap: 6px; }
+.bio-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 
 /* ===== avatar pencil badge ===== */
-.avatar-pencil { width: 128px; height: 128px; margin: 0 auto 1rem; position: relative; }
-.avatar-edit-badge {
-  position: absolute; right: 4px; bottom: 4px;
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; border-radius: 9999px; background: #fff;
-  border: 1px solid #e5e7eb; box-shadow: 0 1px 2px rgba(0,0,0,.06); opacity: .9;
-  pointer-events: none;
+.avatar-pencil {
+  width: 128px; height: 128px; margin: 0 auto 1rem; position: relative;
 }
+
+.avatar-edit-badge {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  opacity: .9;
+  pointer-events: none; /* clicks go to the file input beneath */
+}
+
 .avatar-edit-badge svg { width: 16px; height: 16px; opacity: .7; }
+
+/* pop a little on hover */
 .avatar-wrap:hover .avatar-edit-badge { opacity: 1; }
 
-.login-status-container { display: flex; justify-content: flex-end; padding: 0.5rem 1rem; }
-.login-status { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; }
-.login-status .dot { width: 10px; height: 10px; border-radius: 50%; background-color: grey; }
-.login-status.logged-in .dot { background-color: #2ecc71; }
-.login-status.logged-out .dot { background-color: #e74c3c; }
-
-.tagline {
-  font-size: clamp(0.95rem, 1.6vw, 1.05rem);
-  font-weight: 400;
-  line-height: 1.5;
-  color: #6b7280;
-  margin: .4rem 0 1rem;
-  max-width: 72ch;
+.login-status-container {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 1rem;
 }
-.login-button-wrap { display: flex; gap: .5rem; align-items: center; margin-top: .75rem; flex-wrap: wrap; }
 
-/* ===============================
+.login-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.login-status .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: grey;
+}
+
+.login-status.logged-in .dot {
+  background-color: #2ecc71; /* green */
+}
+
+.login-status.logged-out .dot {
+  background-color: #e74c3c; /* red */
+}
+
+    .tagline {
+      font-size: clamp(0.95rem, 1.6vw, 1.05rem); /* smaller */
+      font-weight: 400;                           /* not bold */
+      line-height: 1.5;
+      color: #6b7280;                             /* softer gray */
+      margin: .4rem 0 1rem;
+      max-width: 72ch;
+    }
+    .login-button-wrap { display: flex; gap: .5rem; align-items: center; margin-top: .75rem; flex-wrap: wrap; }
+
+  /* ===============================
    Error Pages (403 / 404 / 500)
    =============================== */
+
+/* Container & layout */
 .nf-shell {
-  max-width: 640px; margin: 3rem auto; padding: 1.25rem; text-align: center;
-  display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh;
+  max-width: 640px;
+  margin: 3rem auto;
+  padding: 1.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh; /* vertical centering */
 }
-.nf-card { background: var(--card); border: 1px solid var(--border); border-radius: 1rem; padding: 1.25rem; }
-.nf-title { font-size: clamp(1.6rem, 2.8vw, 2.2rem); margin-bottom: 0.75rem; }
-.nf-text { color: var(--muted); margin-bottom: 1.25rem; }
-.cta { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
+
+/* Card */
+.nf-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+}
+
+/* Typography */
+.nf-title {
+  font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+  margin-bottom: 0.75rem;
+}
+
+.nf-text {
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+}
+
+/* CTA group */
+.cta {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
 
 /* Improve button focus visibility (keeps your existing btn styles) */
-.btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
 
 /* 404 “Jump to @handle” form */
 .jump {
-  display: flex; gap: 0.5rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1rem;
+  flex-wrap: wrap;
 }
+
 .jump input {
-  padding: 0.6rem 0.75rem; border: 1px solid var(--border); background: transparent; color: var(--text);
-  border-radius: 0.6rem; min-width: 240px;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 0.6rem;
+  min-width: 240px;
 }
-.jump input::placeholder { color: var(--muted); }
+
+.jump input::placeholder {
+  color: var(--muted);
+}
 
 /* ===== Login page (clean overrides) ===== */
 body.index-page .login-page {
-  max-width: 520px; margin: 0 auto; padding: 2rem 1rem 3rem; text-align: center;
+  max-width: 520px;       /* override older 400px */
+  margin: 0 auto;         /* override older 4rem auto */
+  padding: 2rem 1rem 3rem;
+  text-align: center;
 }
+
+/* Tighten heading in card header */
 .card-head h1 { margin: 0; }
+
+/* Error message block for login failures */
 .alert-error {
-  color: #b91c1c; padding: .75rem; border: 1px solid var(--border);
-  border-radius: .75rem; background: rgba(185, 28, 28, .10);
+  color: #b91c1c;
+  padding: .75rem;
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  background: rgba(185, 28, 28, .10);
 }
 
 /* ===============================
    Profile Links Editor (dashboard)
    =============================== */
-.profile-shell { max-width: 520px; margin: 0 auto; padding: 2rem 1rem 6rem; text-align: center; }
+
+/* Shell */
+.profile-shell {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 2rem 1rem 6rem;
+  text-align: center;
+}
+
 /* Avatar container (scoped so it doesn't affect public profile) */
-.profile-shell .avatar-wrap { width: 128px; height: 128px; margin: 0 auto 1rem; position: relative; }
-.profile-shell .avatar-wrap img { width: 128px; height: 128px; border-radius: 9999px; object-fit: cover; }
-.profile-shell .avatar-wrap input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.profile-shell .avatar-wrap {
+  width: 128px;
+  height: 128px;
+  margin: 0 auto 1rem;
+  position: relative;
+}
+.profile-shell .avatar-wrap img {
+  width: 128px;
+  height: 128px;
+  border-radius: 9999px;
+  object-fit: cover;
+}
+.profile-shell .avatar-wrap input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
 
 /* Editable inputs / areas */
-.editable-text { border: none; background: transparent; padding: 0; margin: 0; width: 100%; font: inherit; color: inherit; outline: none; }
+.editable-text {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  outline: none;
+}
 .editable-text:focus { outline: 2px dashed #9ca3af; outline-offset: 2px; }
 .editable-area[contenteditable="true"]:focus { outline: 2px dashed #9ca3af; outline-offset: 2px; }
 
 /* Placeholder for empty contenteditable bios */
-.editable-area[data-empty="true"]::before { content: attr(data-placeholder); color: #9ca3af; pointer-events: none; }
+.editable-area[data-empty="true"]::before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+}
 
 /* Page-specific tweaks moved from inline styles */
 .profile-shell h1 { margin-top: 0.75rem; }
@@ -380,16 +570,33 @@ body.index-page .login-page {
 
 /* Handle row */
 .profile-shell .handle {
-  display: flex; justify-content: center; align-items: center; margin-bottom: .25rem;
-  font-size: .95rem; color: var(--muted);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: .25rem;
+  font-size: .95rem;
+  color: var(--muted);
 }
-.profile-shell .handle .editable-text { text-align: center; width: auto; min-width: 6ch; padding: 0; margin: 0; line-height: 1; }
+.profile-shell .handle .editable-text {
+  text-align: center;
+  width: auto;
+  min-width: 6ch;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+}
 
 /* Links list + cards */
 .links { display: grid; gap: 10px; margin-top: 1.5rem; }
 .link-card {
-  border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px;
-  display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  background: var(--card);
 }
 .link-guts { display: grid; gap: 6px; text-align: left; }
 .link-title { font-weight: 600; }
@@ -397,7 +604,14 @@ body.index-page .login-page {
 
 /* Actions */
 .link-actions { display: flex; gap: 8px; align-items: center; }
-.icon-btn { border: 1px solid var(--border); background: #fff; color: #0b0f19; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+.icon-btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #0b0f19;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
 .icon-btn[disabled] { opacity: .5; cursor: not-allowed; }
 
 /* Drag handle helper */
@@ -410,18 +624,30 @@ body.index-page .login-page {
 .text-sm { font-size: 0.875rem; }
 .text-center { text-align: center; }
 .mt-1 { margin-top: 0.25rem; }
-.muted { color: var(--muted); }
+.muted { color: var(--muted); } /* used by <small class="muted">Edited</small> */
 
 /* ===============================
    Public Profile (profile_detail)
    =============================== */
+
+/* Round, pill-style action buttons */
 .copy-btn,
 .share-btn {
-  display: inline-flex; align-items: center; gap: .5rem; padding: .6rem .9rem;
-  border-radius: 9999px; background: var(--btn); color: var(--text);
-  border: 1px solid transparent; font: inherit; text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .6rem .9rem;
+  border-radius: 9999px;
+  background: var(--btn);
+  color: var(--text);
+  border: 1px solid transparent;
+  font: inherit;
+  text-decoration: none;
 }
-.copy-btn:hover, .share-btn:hover { background: var(--btn-hover); }
+.copy-btn:hover,
+.share-btn:hover {
+  background: var(--btn-hover);
+}
 
 /* Focus ring for interactive elements not using .btn */
 .copy-btn:focus-visible,
@@ -443,132 +669,52 @@ article.profile nav.links { margin-top: .25rem; }
 .brand { color: var(--muted); text-decoration: none; }
 .brand:hover { text-decoration: underline; }
 
-/* Optional placeholder avatar style */
+/* Optional placeholder avatar style (fixes a typo from inline rules) */
 .avatar.placeholder {
-  width: 128px; height: 128px; border-radius: 9999px; display: grid; place-items: center;
-  font-size: 4rem; font-weight: 700; background: var(--btn); color: var(--muted);
+  width: 128px;
+  height: 128px;
+  border-radius: 9999px;
+  display: grid;
+  place-items: center;
+  font-size: 4rem;
+  font-weight: 700;
+  background: var(--btn);
+  color: var(--muted);
 }
 
-/* ===============================
-   ✨ Contrast Upgrade OVERRIDES
-   =============================== */
-
-/* 1) Improve legibility on profile */
-.profile .handle,
-.profile .bio { color: var(--muted-strong); }
-
-/* 2) Clear separation for link buttons */
-.link-btn{
-  background: var(--surface-raise);
-  border: 1px solid var(--border-strong);
-  box-shadow: var(--shadow-strong);
-}
-.link-btn:hover{
-  background: var(--surface-raise-2);
-  transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(0,0,0,.5);
+/* Make inline <svg class="edit-icon"> visible in dark mode */
+.edit-icon {
+  fill: var(--muted);     /* works with <use> content */
+  color: var(--muted);    /* for safety if you prefer currentColor */
+  opacity: .6;            /* a touch more visible than .45 */
 }
 
-/* 3) Ensure titles/URLs meet contrast */
-.link-title { color: var(--text-strong); }
-.link-url   { color: var(--muted-strong); }
-
-/* 4) Avatar ring clearer against cards */
-.avatar{
-  border: 4px solid var(--surface-raise); /* keeps thickness but ups contrast */
-  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+/* On hover/focus, pop a bit */
+.editable-wrap:hover .edit-icon,
+.editable-wrap:focus-within .edit-icon,
+.bio-wrap:hover .edit-icon,
+.bio-wrap:focus-within .edit-icon {
+  fill: var(--text);
+  color: var(--text);
+  opacity: .95;
 }
 
-/* 5) Cards/alerts/rows: stronger edges and subtle lift */
-.card, .alert, .link-list.editable .row {
-  border-color: var(--border-strong);
-  background: var(--surface-raise);
+/* Make all inline icons follow the surrounding text color */
+.icon,
+.icon * {
+  fill: currentColor;   /* use the element's color for SVG fill */
 }
 
-/* 6) Inputs within editor/profile: visible outlines remain */
-.link-list.editable .row:focus-within,
-.row:focus-visible{
-  outline: 3px solid var(--focus);
-  outline-offset: 3px;
+/* Ensure the surrounding elements provide the right color */
+.copy-btn,
+.share-btn,
+.link-btn {
+  color: var(--text);   /* already set for buttons, add for link-btn just in case */
 }
 
-/* 7) Buttons in dark: clearer borders and hover */
-@media (prefers-color-scheme: dark){
-  .btn { border-color: var(--border-strong); }
-  .btn:hover { background: rgba(255,255,255,.08); }
-
-  .copy-btn, .share-btn {
-    background: #232323;
-    border: 1px solid var(--border-strong);
-  }
-  .copy-btn:hover, .share-btn:hover { background: #2b2b2b; }
-}
-
-/* 8) Mobile nav popover edges */
-@media (max-width: 768px){
-  .nav-links{
-    border-color: var(--border-strong);
-    box-shadow: 0 16px 36px rgba(0,0,0,.45);
-  }
-}
-
-/* 9) Respect high-contrast user settings */
-@media (prefers-contrast: more){
-  .link-btn, .card, .alert { border-color: rgba(255,255,255,.5); }
-  .nav-links a { text-decoration: underline; }
-  .btn.primary { box-shadow: 0 0 0 3px rgba(52,211,153,.35); }
-}
-@media (forced-colors: active){
-  .card, .link-btn, .btn { border: 1px solid CanvasText; }
-}
-
-/* ===== Avatar edit badge: dark-mode contrast fix ===== */
-:root{
-  --badge-bg: #ffffff;
-  --badge-border: #e5e7eb;
-  --badge-icon: #0b0f19;
-}
-@media (prefers-color-scheme: dark){
-  :root{
-    /* Dark pill with light icon */
-    --badge-bg: #121212;
-    --badge-border: rgba(255,255,255,.55);
-    --badge-icon: #f8fafc;
-  }
-}
-
-/* Upgrade the badge to use tokens + add a halo ring for any background */
-.avatar-edit-badge{
-  background: var(--badge-bg);
-  border: 1px solid var(--badge-border);
-  /* the second shadow is a solid ring that separates the badge from the photo */
-  box-shadow: 0 2px 6px rgba(0,0,0,.35), 0 0 0 2px var(--card);
-  color: var(--badge-icon);              /* lets the SVG inherit */
-  z-index: 1;                            /* ensure it sits above the avatar */
-}
-
-/* Make sure the pencil takes the badge color in any SVG */
-.avatar-edit-badge svg{
-  display: block;
-}
-.avatar-edit-badge svg,
-.avatar-edit-badge svg *{
-  fill: currentColor;
-  stroke: currentColor;
-  opacity: 1;                            /* override the .7 so it’s crisp */
-}
-
-/* Optional: slightly larger target on small screens */
-@media (max-width: 640px){
-  .avatar-edit-badge{ width: 30px; height: 30px; }
-}
-
-/* High-contrast/forced colors support */
-@media (forced-colors: active){
-  .avatar-edit-badge{
-    background: Canvas;
-    border: 1px solid CanvasText;
-    box-shadow: 0 0 0 2px Canvas;        /* keep a visible ring */
-    color: CanvasText;
-  }
+/* Optional: a little hover pop */
+.copy-btn:hover .icon,
+.share-btn:hover .icon,
+.link-btn:hover .icon {
+  opacity: .95;
 }
