@@ -885,3 +885,90 @@ article.profile nav.links { margin-top: .25rem; }
 
 /* Placeholder tone on white */
 .editable-area[data-empty="true"]::before { color: #9ca3af; }
+
+/* Make the bio surface behave exactly like the other editors */
+.editor-bio {
+  display: flex;
+  align-items: flex-start;   /* so multi-line bio aligns to top */
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Bio content fills the surface width, preserves line breaks */
+.editor-bio .editable-area {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: pre-wrap;
+  min-height: 6.5rem;
+  text-align: left;
+  background: transparent;   /* surface bg is on the parent */
+  border: 0;
+  padding: 0;
+}
+
+/* Keep the pencil neatly aligned inside the surface */
+.editor-bio .edit-icon {
+  align-self: flex-start;
+  opacity: .65;
+}
+
+/* Neutralize older bio-wrap styles if any remain in the cascade */
+.bio-wrap { display: block; width: 100%; }
+
+/* === Fix overflow/length on Display Name + Handle editors === */
+
+/* Make the heading row behave like a normal block container */
+.editor-title {
+  margin: 0;
+  width: 100%;
+  display: block;
+}
+
+/* Clamp the white surfaces to the row width and prevent horizontal overflow */
+.editor-title .editor-surface,
+.editor-row > .editor-surface {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;          /* stops the surface from spilling to the right */
+}
+
+/* Inputs inside the flex surface must be allowed to shrink */
+.editor-row .editable-text {
+  min-width: 0;              /* critical for flex children to shrink */
+  width: 100%;
+}
+
+/* If a ridiculously long word/handle is typed, allow breaking instead of pushing the surface wider */
+.editor-row .editable-text,
+.editor-row .editable-text::placeholder {
+  overflow-wrap: anywhere;   /* modern browsers */
+  word-break: break-word;    /* fallback */
+}
+
+/* Keep the inline pencil and the '@' from forcing extra width */
+.editor-row .edit-icon { flex: 0 0 auto; }
+.prefix-at { flex: 0 0 auto; }
+
+/* === Center text inside handle editor === */
+
+/* Center the handle text and placeholder */
+.editor-row [name="handle"].editable-text {
+  text-align: center;
+}
+
+/* Keep @ prefix visually close and centered */
+.editor-row .prefix-at {
+  display: inline-block;
+  text-align: right;
+  min-width: 1ch;
+  padding-right: 2px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* Align the overall handle editor content centrally */
+.editor-row .editor-surface {
+  justify-content: center;
+}

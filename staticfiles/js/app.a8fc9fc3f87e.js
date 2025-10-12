@@ -226,7 +226,8 @@ window.profileLinksEditor = function profileLinksEditor(){
 
       const payload = new FormData();
       const displayName = root.querySelector('input[name="display_name"]')?.value ?? '';
-      const handle = root.querySelector('input[name="handle"]')?.value ?? '';
+      const handleInput = root.querySelector('input[name="handle"]');
+      const handle = handleInput?.value ?? '';
 
       // Bio: support both contenteditable div and textarea
       const bioEl = getBioEl(root);
@@ -258,14 +259,21 @@ window.profileLinksEditor = function profileLinksEditor(){
         });
         if(!resp.ok){ throw new Error('Save failed with status ' + resp.status); }
 
-        // If response includes JSON with new handle, broadcast it
+        // Try JSON; if not JSON, fall back to the current input value.
+        let newHandle = handle;
         try {
           const data = await resp.json();
-          if(data && data.handle){
-            const event = new CustomEvent('profile:saved', { detail: { handle: data.handle }});
-            window.dispatchEvent(event);
-          }
-        } catch(_) { /* non-JSON response is fine */ }
+          if (data && data.handle) newHandle = data.handle;
+        } catch(_) { /* HTML response is fine; use input value */ }
+
+        // If the handle changed, reload the page so the new URL and links update cleanly
+        if (newHandle && newHandle !== handle) {
+          window.location.reload();
+        } else if (newHandle) {
+          // Still broadcast for consistency if needed
+          const event = new CustomEvent('profile:saved', { detail: { handle: newHandle }});
+          window.dispatchEvent(event);
+        }
       } catch(err){
         console.error(err);
         this.errors.general = 'Could not save. Please try again.';
