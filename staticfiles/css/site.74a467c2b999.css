@@ -277,7 +277,7 @@ body.index-page .new-here .login-button-wrap {
    =============================== */
 @media (max-width:640px){
   .link-list.editable .row{grid-template-columns:32px 1fr}
-  .actions{grid-column:1 / -1;justify-content:flex-end}
+  .actions{grid-column:1 / -1;justify-content:center}
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -298,8 +298,9 @@ body.index-page .new-here .login-button-wrap {
 .links { margin-bottom: 1.0rem; }
 
 @media (max-width: 600px) {
-  .links {
-    padding: 0 1rem;
+  .links
+ {
+    padding: 3rem;
   }
 }
 
@@ -665,7 +666,7 @@ article.profile nav.links { margin-top: .25rem; }
 .icon.external { opacity: .8; }
 
 /* Footer brand link style */
-.profile-footer { text-align: center; margin-top: .5rem; }
+.profile-footer { text-align: center; margin-bottom: .5rem; }
 .brand { color: var(--muted); text-decoration: none; }
 .brand:hover { text-decoration: underline; }
 
@@ -718,3 +719,169 @@ article.profile nav.links { margin-top: .25rem; }
 .link-btn:hover .icon {
   opacity: .95;
 }
+
+/* Bio contenteditable should behave like a textarea */
+.bio.editable-area[contenteditable="true"] {
+  white-space: pre-wrap;   /* keep line breaks */
+  min-height: 6.5rem;      /* similar to rows="6" */
+  text-align: left;        /* better for multi-line text */
+}
+
+/* If using Alpine’s x-cloak anywhere */
+[x-cloak] { display: none !important; }
+
+/* === Unified white “input-like” surfaces for editable fields === */
+
+/* Base surface used by display name, handle, and bio */
+.editable-surface {
+  background: #ffffff;          /* crisp white in both themes */
+  color: #0b0f19;               /* readable on white */
+  border: 1px solid #e5e7eb;    /* subtle gray border */
+  border-radius: .75rem;
+  padding: .6rem .75rem;
+  box-shadow: 0 1px 0 rgba(0,0,0,.03) inset;
+}
+
+/* Keep existing layout behavior for the input wrappers */
+.editable-wrap.editable-surface {
+  display: flex;
+  align-items: center;
+  gap: 6px;                     /* space for the pencil icon */
+  width: 100%;
+}
+
+/* Make the input fill the surface and remove its own bg/border */
+.editable-surface .editable-text {
+  background: transparent;
+  border: 0;
+  width: 100%;
+  color: inherit;
+}
+
+/* Focus ring consistent with your buttons/links */
+.editable-surface:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Bio contenteditable should behave like a textarea on the same surface */
+.bio.editable-surface[contenteditable="true"] {
+  display: block;               /* so it can grow full width */
+  white-space: pre-wrap;        /* preserve line breaks */
+  min-height: 6.5rem;           /* similar to rows="6" */
+  text-align: left;
+}
+
+/* Placeholder color on white surface (uses your data-empty helper) */
+.editable-area[data-empty="true"]::before {
+  color: #9ca3af;               /* readable on white */
+}
+
+/* Tweak the inline pencil so it sits nicely on the surface */
+.editable-wrap.editable-surface .edit-icon,
+.bio-wrap .edit-icon {
+  flex: 0 0 auto;
+  opacity: .65;
+}
+.editable-wrap.editable-surface:hover .edit-icon,
+.editable-wrap.editable-surface:focus-within .edit-icon,
+.bio-wrap:hover .edit-icon,
+.bio-wrap:focus-within .edit-icon {
+  opacity: .95;
+}
+
+/* ===============================
+   Uniform width for all editors
+   =============================== */
+
+/* Single source of truth for editor width */
+:root { --editor-width: 520px; }
+
+/* Row wrapper that constrains width and centers each editor block */
+.editor-row {
+  width: min(100%, var(--editor-width));
+  margin-inline: auto;
+  margin-bottom: 12px;
+}
+
+/* Make all editable “surfaces” fill the row width */
+.editor-surface,
+.editor-surface-block,
+.editor-row .editable-surface {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+/* Bio surface is a block container (text area style) */
+.editor-surface-block {
+  display: block;
+  width: 100%;
+}
+
+/* Keep the bio’s contenteditable full-width within its surface */
+.editor-surface-block .editable-surface,
+.bio.editable-surface[contenteditable="true"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Handle row: bring @ inside and space it nicely */
+.prefix-at {
+  color: #6b7280;
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+/* Make the <h1> wrapper not influence width */
+.editor-title {
+  margin: 0;
+  font: inherit;
+}
+
+/* Make link groups the same width as editors */
+.editor-row .links,
+.editor-row .link-card {
+  width: 100%;
+  box-sizing: border-box;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* On small screens your .links had extra padding; remove so widths match */
+.profile-shell .links { padding: 0 !important; }
+
+/* Ensure inline “editable” inputs don’t shrink the surface */
+.editor-row .editable-text {
+  min-width: 0;   /* allow flex children to shrink properly */
+  width: 100%;
+}
+
+/* Keep the existing white surface look for all editor surfaces */
+.editor-surface,
+.editor-surface-block .editable-surface {
+  background: #ffffff;
+  color: #0b0f19;
+  border: 1px solid #e5e7eb;
+  border-radius: .75rem;
+  padding: .6rem .75rem;
+  box-shadow: 0 1px 0 rgba(0,0,0,.03) inset;
+}
+
+/* Focus ring */
+.editor-surface:focus-within,
+.editor-surface-block .editable-surface:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Bio behavior */
+.bio.editable-surface[contenteditable="true"] {
+  white-space: pre-wrap;
+  min-height: 6.5rem;
+  text-align: left;
+}
+
+/* Placeholder tone on white */
+.editable-area[data-empty="true"]::before { color: #9ca3af; }

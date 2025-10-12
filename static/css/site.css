@@ -789,3 +789,186 @@ article.profile nav.links { margin-top: .25rem; }
 .bio-wrap:focus-within .edit-icon {
   opacity: .95;
 }
+
+/* ===============================
+   Uniform width for all editors
+   =============================== */
+
+/* Single source of truth for editor width */
+:root { --editor-width: 520px; }
+
+/* Row wrapper that constrains width and centers each editor block */
+.editor-row {
+  width: min(100%, var(--editor-width));
+  margin-inline: auto;
+  margin-bottom: 12px;
+}
+
+/* Make all editable “surfaces” fill the row width */
+.editor-surface,
+.editor-surface-block,
+.editor-row .editable-surface {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+/* Bio surface is a block container (text area style) */
+.editor-surface-block {
+  display: block;
+  width: 100%;
+}
+
+/* Keep the bio’s contenteditable full-width within its surface */
+.editor-surface-block .editable-surface,
+.bio.editable-surface[contenteditable="true"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Handle row: bring @ inside and space it nicely */
+.prefix-at {
+  color: #6b7280;
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+/* Make the <h1> wrapper not influence width */
+.editor-title {
+  margin: 0;
+  font: inherit;
+}
+
+/* Make link groups the same width as editors */
+.editor-row .links,
+.editor-row .link-card {
+  width: 100%;
+  box-sizing: border-box;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* On small screens your .links had extra padding; remove so widths match */
+.profile-shell .links { padding: 0 !important; }
+
+/* Ensure inline “editable” inputs don’t shrink the surface */
+.editor-row .editable-text {
+  min-width: 0;   /* allow flex children to shrink properly */
+  width: 100%;
+}
+
+/* Keep the existing white surface look for all editor surfaces */
+.editor-surface,
+.editor-surface-block .editable-surface {
+  background: #ffffff;
+  color: #0b0f19;
+  border: 1px solid #e5e7eb;
+  border-radius: .75rem;
+  padding: .6rem .75rem;
+  box-shadow: 0 1px 0 rgba(0,0,0,.03) inset;
+}
+
+/* Focus ring */
+.editor-surface:focus-within,
+.editor-surface-block .editable-surface:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Bio behavior */
+.bio.editable-surface[contenteditable="true"] {
+  white-space: pre-wrap;
+  min-height: 6.5rem;
+  text-align: left;
+}
+
+/* Placeholder tone on white */
+.editable-area[data-empty="true"]::before { color: #9ca3af; }
+
+/* Make the bio surface behave exactly like the other editors */
+.editor-bio {
+  display: flex;
+  align-items: flex-start;   /* so multi-line bio aligns to top */
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Bio content fills the surface width, preserves line breaks */
+.editor-bio .editable-area {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: pre-wrap;
+  min-height: 6.5rem;
+  text-align: left;
+  background: transparent;   /* surface bg is on the parent */
+  border: 0;
+  padding: 0;
+}
+
+/* Keep the pencil neatly aligned inside the surface */
+.editor-bio .edit-icon {
+  align-self: flex-start;
+  opacity: .65;
+}
+
+/* Neutralize older bio-wrap styles if any remain in the cascade */
+.bio-wrap { display: block; width: 100%; }
+
+/* === Fix overflow/length on Display Name + Handle editors === */
+
+/* Make the heading row behave like a normal block container */
+.editor-title {
+  margin: 0;
+  width: 100%;
+  display: block;
+}
+
+/* Clamp the white surfaces to the row width and prevent horizontal overflow */
+.editor-title .editor-surface,
+.editor-row > .editor-surface {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;          /* stops the surface from spilling to the right */
+}
+
+/* Inputs inside the flex surface must be allowed to shrink */
+.editor-row .editable-text {
+  min-width: 0;              /* critical for flex children to shrink */
+  width: 100%;
+}
+
+/* If a ridiculously long word/handle is typed, allow breaking instead of pushing the surface wider */
+.editor-row .editable-text,
+.editor-row .editable-text::placeholder {
+  overflow-wrap: anywhere;   /* modern browsers */
+  word-break: break-word;    /* fallback */
+}
+
+/* Keep the inline pencil and the '@' from forcing extra width */
+.editor-row .edit-icon { flex: 0 0 auto; }
+.prefix-at { flex: 0 0 auto; }
+
+/* === Center text inside handle editor === */
+
+/* Center the handle text and placeholder */
+.editor-row [name="handle"].editable-text {
+  text-align: center;
+}
+
+/* Keep @ prefix visually close and centered */
+.editor-row .prefix-at {
+  display: inline-block;
+  text-align: right;
+  min-width: 1ch;
+  padding-right: 2px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* Align the overall handle editor content centrally */
+.editor-row .editor-surface {
+  justify-content: center;
+}

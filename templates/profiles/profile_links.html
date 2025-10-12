@@ -17,7 +17,7 @@
       x-init="init()">
   {% csrf_token %}
 
-  <!-- Avatar -->
+  <!-- Avatar (full width shell but visually centered) -->
   <div class="avatar-wrap">
     <img
       id="avatarPreview"
@@ -31,24 +31,26 @@
     </span>
   </div>
 
-  <!-- Display name -->
-  <h1>
-    <span class="editable-wrap editable-surface">
-      <input
-        class="editable-text"
-        type="text"
-        name="display_name"
-        value="{{ profile.display_name }}"
-        placeholder="Your name"
-        @blur="saveProfile" />
-      <svg class="edit-icon" aria-hidden="true"><use href="#icon-pencil"/></svg>
-    </span>
-  </h1>
+  <!-- Display name (uniform width) -->
+  <div class="editor-row">
+    <h1 class="editor-title">
+      <span class="editable-wrap editable-surface editor-surface">
+        <input
+          class="editable-text"
+          type="text"
+          name="display_name"
+          value="{{ profile.display_name }}"
+          placeholder="Your name"
+          @blur="saveProfile" />
+        <svg class="edit-icon" aria-hidden="true"><use href="#icon-pencil"/></svg>
+      </span>
+    </h1>
+  </div>
 
-  <!-- Handle -->
-  <div class="handle">
-    <span style="font-weight:500; line-height:1;" aria-hidden="true">@</span>
-    <span class="editable-wrap editable-surface">
+  <!-- Handle (uniform width, '@' inside the surface) -->
+  <div class="editor-row">
+    <div class="editable-wrap editable-surface editor-surface">
+      <span class="prefix-at" aria-hidden="true">@</span>
       <input
         class="editable-text"
         type="text"
@@ -59,78 +61,73 @@
         @input="onHandleInput($event)"
         @blur="saveProfile" />
       <svg class="edit-icon" aria-hidden="true"><use href="#icon-pencil"/></svg>
-    </span>
+    </div>
+    <p x-text="errors.handle" x-show="errors.handle" class="text-red-500 text-sm text-center mt-1" aria-live="polite"></p>
   </div>
 
-  <!-- Inline validation message for handle -->
-  <p x-text="errors.handle" x-show="errors.handle" class="text-red-500 text-sm text-center mt-1" aria-live="polite"></p>
-
-  <!-- Bio (now has the same white “input” surface) -->
-  <div class="bio-wrap" style="width:100%; justify-content:center;">
-    <div
-      class="bio editable-area editable-surface"
-      name="bio"
-      contenteditable="true"
-      data-placeholder="Write your bio here"
-      x-ref="bio"
-      @input="updateBioPlaceholder"
-      @blur="saveProfile"
-    >{{ profile.bio|default_if_none:'' }}</div>
-    <svg class="edit-icon" aria-hidden="true"><use href="#icon-pencil"/></svg>
+  <!-- Bio (uniform width, icon inside the same surface) -->
+  <div class="editor-row">
+    <div class="editable-wrap editable-surface editor-surface editor-bio">
+      <div
+        class="bio editable-area"
+        name="bio"
+        contenteditable="true"
+        data-placeholder="Write your bio here"
+        x-ref="bio"
+        @input="updateBioPlaceholder"
+        @blur="saveProfile"
+      >{{ profile.bio|default_if_none:'' }}</div>
+      <svg class="edit-icon" aria-hidden="true"><use href="#icon-pencil"/></svg>
+    </div>
   </div>
 
-  <!-- Links list -->
-  <div class="links" id="linksList">
-    {% if formset.management_form %}{{ formset.management_form }}{% endif %}
-    {% for f in formset %}
-      {% with pk=f.instance.pk title_val=f.instance.title url_val=f.instance.url %}
-      <div class="link-card" data-id="{{ pk }}">
-        <div class="link-guts">
-          <input
-            class="editable-text link-title"
-            type="text"
-            value="{{ title_val|default:url_val }}"
-            placeholder="Display title"
-            data-field="title"
-            data-original="{{ title_val|default:url_val }}"
-            @blur="onLinkFieldBlur($event)">
-          <input
-            class="editable-text link-url"
-            type="url"
-            value="{{ url_val }}"
-            placeholder="https://example.com"
-            data-field="url"
-            data-original="{{ url_val }}"
-            @blur="onLinkFieldBlur($event)">
-          <small class="muted hidden" data-edited-pill>Edited</small>
+  <!-- Links list (uniform width) -->
+  <div class="editor-row">
+    <div class="links" id="linksList">
+      {% if formset.management_form %}{{ formset.management_form }}{% endif %}
+      {% for f in formset %}
+        {% with pk=f.instance.pk title_val=f.instance.title url_val=f.instance.url %}
+        <div class="link-card" data-id="{{ pk }}">
+          <div class="link-guts">
+            <input
+              class="editable-text link-title"
+              type="text"
+              value="{{ title_val|default:url_val }}"
+              placeholder="Display title"
+              data-field="title"
+              data-original="{{ title_val|default:url_val }}"
+              @blur="onLinkFieldBlur($event)">
+            <input
+              class="editable-text link-url"
+              type="url"
+              value="{{ url_val }}"
+              placeholder="https://example.com"
+              data-field="url"
+              data-original="{{ url_val }}"
+              @blur="onLinkFieldBlur($event)">
+            <small class="muted hidden" data-edited-pill>Edited</small>
+          </div>
+          <div class="link-actions">
+            <button type="button" class="icon-btn" @click="deleteLink($event)" title="Delete" {% if not pk %}disabled{% endif %}>Delete</button>
+          </div>
         </div>
-        <div class="link-actions">
-          <button type="button" class="icon-btn" @click="deleteLink($event)" title="Delete" {% if not pk %}disabled{% endif %}>Delete</button>
-        </div>
+        {% endwith %}
+      {% empty %}
+        <p>No links yet — add your first one below.</p>
+      {% endfor %}
+    </div>
+
+    <!-- Add new link -->
+    <div class="link-card" style="margin-top: 10px;">
+      <div class="link-guts">
+        <input class="editable-text link-title" type="text" placeholder="Display title" id="newTitle">
+        <input class="editable-text link-url" type="url" placeholder="https://example.com" id="newUrl">
       </div>
-      {% endwith %}
-    {% empty %}
-      <p>No links yet — add your first one below.</p>
-    {% endfor %}
-  </div>
-
-  <!-- Add new link -->
-  <div class="link-card" style="margin-top: 10px;">
-    <div class="link-guts">
-      <input class="editable-text link-title" type="text" placeholder="Display title" id="newTitle">
-      <input class="editable-text link-url" type="url" placeholder="https://example.com" id="newUrl">
-    </div>
-    <div class="link-actions">
-      <button type="button" class="icon-btn" @click="createLink">Add</button>
+      <div class="link-actions">
+        <button type="button" class="icon-btn" @click="createLink">Add</button>
+      </div>
     </div>
   </div>
-
-  <!-- Save toolbar -->
-  <div class="toolbar" style="margin-top:1rem">
-    <button class="btn primary" type="submit" @click.prevent="saveProfile($event)">Save changes</button>
-    <a class="btn outline" href="{% url 'profile-detail' request.user.profile.handle %}">View public profile</a>
-  </div>
-</form>
 
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 {% endblock %}
