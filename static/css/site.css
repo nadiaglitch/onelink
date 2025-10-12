@@ -666,7 +666,7 @@ article.profile nav.links { margin-top: .25rem; }
 .icon.external { opacity: .8; }
 
 /* Footer brand link style */
-.profile-footer { text-align: center; margin-top: .5rem; }
+.profile-footer { text-align: center; margin-bottom: .5rem; }
 .brand { color: var(--muted); text-decoration: none; }
 .brand:hover { text-decoration: underline; }
 
