@@ -989,8 +989,8 @@ article.profile nav.links { margin-top: .25rem; }
 /* If a ridiculously long word/handle is typed, allow breaking instead of pushing the surface wider */
 .editor-row .editable-text,
 .editor-row .editable-text::placeholder {
-  overflow-wrap: anywhere;   /* modern browsers */
-  word-break: break-word;    /* fallback */
+  overflow-wrap: anywhere;   /* modern */
+  word-break: normal;        /* avoid nonstandard 'break-word' */
 }
 
 /* Keep the inline pencil and the '@' from forcing extra width */
