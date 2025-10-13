@@ -3,13 +3,13 @@ window.profileLinksEditor = function profileLinksEditor(){
 
   // ---- helpers for bio syncing ----
   function findEditableBio(root){
-    return root.querySelector('[contenteditable="true"][name="bio"]')
-        || root.querySelector('.editable-area.bio[contenteditable="true"]')
-        || root.querySelector('[data-bio-editable]')
-        || root.querySelector('[x-ref="bioEditable"]');
+    return root.querySelector('[contenteditable="true"][name="bio"]') ||
+           root.querySelector('.editable-area.bio[contenteditable="true"]') ||
+           root.querySelector('[data-bio-editable]') ||
+           root.querySelector('[x-ref="bioEditable"]');
   }
   function ensureBioField(form){
-    let fld = form.querySelector('textarea[name="bio"], input[type="hidden"][name="bio"], input[type="text"][name="bio"]');
+    var fld = form.querySelector('textarea[name="bio"], input[type="hidden"][name="bio"], input[type="text"][name="bio"]');
     if(!fld){
       fld = document.createElement('input');
       fld.type = 'hidden';
@@ -19,22 +19,22 @@ window.profileLinksEditor = function profileLinksEditor(){
     return fld;
   }
   function syncBioToForm(root){
-    const form = root.querySelector('form.profile-shell') || document.querySelector('form.profile-shell');
+    var form = root.querySelector('form.profile-shell') || document.querySelector('form.profile-shell');
     if(!form) return;
-    const editable = findEditableBio(root);
+    var editable = findEditableBio(root);
     if(!editable) return;
-    const fld = ensureBioField(form);
+    var fld = ensureBioField(form);
     fld.value = (editable.textContent || '').trim();
   }
   // ---------------------------------
 
   // ---- helpers for formset mgmt ----
   function getFormsetInfo(form){
-    const totalEl = form.querySelector('input[name$="-TOTAL_FORMS"]');
+    var totalEl = form.querySelector('input[name$="-TOTAL_FORMS"]');
     if(!totalEl){ return null; }
-    const name = totalEl.getAttribute('name');            // e.g. "form-TOTAL_FORMS" or "link_set-TOTAL_FORMS"
-    const prefix = name.replace(/-TOTAL_FORMS$/, '');     // e.g. "form" or "link_set"
-    return { totalEl, prefix };
+    var name = totalEl.getAttribute('name');            // e.g. "form-TOTAL_FORMS" or "link_set-TOTAL_FORMS"
+    var prefix = name.replace(/-TOTAL_FORMS$/, '');     // e.g. "form" or "link_set"
+    return { totalEl: totalEl, prefix: prefix };
   }
   function getContainer(){
     return document.querySelector('[data-formset-container]') || document.getElementById('linksList');
@@ -44,135 +44,145 @@ window.profileLinksEditor = function profileLinksEditor(){
   return {
     errors: {},
 
-    init(){
-      const root = document.querySelector('.profile-shell')?.closest('body') || document;
+    init: function(){
+      var ps = document.querySelector('.profile-shell');
+      var root = (ps ? ps.closest('body') : null) || document;
 
       // initialize contenteditable placeholder
-      const bioEl = findEditableBio(root);
+      var bioEl = findEditableBio(root);
       if (bioEl && bioEl.getAttribute && bioEl.getAttribute('contenteditable') === 'true') {
-        const text = (bioEl.textContent || '').trim();
+        var text = (bioEl.textContent || '').trim();
         bioEl.dataset.empty = String(text.length === 0);
       }
       // prime hidden field so initial server value is preserved on first submit
       syncBioToForm(root);
 
       // Delegated blur handler for link inputs (title/url)
-      const form = document.querySelector('form.profile-shell');
+      var form = document.querySelector('form.profile-shell');
       if (form) {
-        form.addEventListener('focusout', (e) => {
-          const t = e.target;
+        form.addEventListener('focusout', function(e){
+          var t = e.target;
           if (!(t && t.tagName === 'INPUT')) return;
-          const name = t.getAttribute('name') || '';
+          var name = t.getAttribute('name') || '';
           if (!/-(title|url)$/.test(name)) return;
           this.onLinkFieldBlur(e);
-        }, true); // capture helps when focus changes quickly
+        }.bind(this), true); // capture helps when focus changes quickly
       }
     },
 
-    onHandleInput(e){
-      const v = (e.target.value || '').toLowerCase().replace(/[^a-z0-9_\\.]/g, '');
-      e.target.value = v;
+    onHandleInput: function(e){
+      var v = (e && e.target && e.target.value ? e.target.value : '').toLowerCase().replace(/[^a-z0-9_\\.]/g, '');
+      if (e && e.target) e.target.value = v;
       this.errors.handle = (v.length < 5) ? 'Handle must be at least 5 characters.' : '';
     },
 
-    updateBioPlaceholder(e){
-      const el = e?.target;
+    updateBioPlaceholder: function(e){
+      var el = e && e.target;
       if(!el || !el.getAttribute) return;
       if (el.getAttribute('contenteditable') === 'true') {
-        const txt = (el.textContent || '').trim();
+        var txt = (el.textContent || '').trim();
         el.dataset.empty = String(txt.length === 0);
       }
     },
 
-    previewAvatar(e){
-      const input = e?.target;
+    previewAvatar: function(e){
+      var input = e && e.target;
       if(!input || !input.files || !input.files[0]) return;
-      const file = input.files[0];
-      const img = document.getElementById('avatarPreview');
+      var file = input.files[0];
+      var img = document.getElementById('avatarPreview');
       try {
-        const url = URL.createObjectURL(file);
-        if (img) img.src = url;
+        var url = window.URL && URL.createObjectURL ? URL.createObjectURL(file) : null;
+        if (img && url) img.src = url;
       } catch(_) {}
-      const root = document.querySelector('.profile-shell')?.closest('body') || document;
+      var ps = document.querySelector('.profile-shell');
+      var root = (ps ? ps.closest('body') : null) || document;
       syncBioToForm(root);
-      const form = input.form || document.querySelector('form.profile-shell');
-      if (form) form.requestSubmit();
+      var form = input.form || document.querySelector('form.profile-shell');
+      if (form && form.requestSubmit) { form.requestSubmit(); }
+      else if (form) { form.submit(); }
     },
 
-    saveProfile(event){
-      const root = document.querySelector('.profile-shell')?.closest('body') || document;
+    saveProfile: function(event){
+      var ps = document.querySelector('.profile-shell');
+      var root = (ps ? ps.closest('body') : null) || document;
       syncBioToForm(root);
-      const form = (event && event.target && event.target.form) || document.querySelector('form.profile-shell');
-      if (form) form.requestSubmit(); // form has novalidate, so it won't be blocked
+      var form = (event && event.target && event.target.form) || document.querySelector('form.profile-shell');
+      if (form && form.requestSubmit) { form.requestSubmit(); }
+      else if (form) { form.submit(); } // form has novalidate, so it won't be blocked
     },
 
-    onLinkFieldBlur(event){
-      const root = document.querySelector('form.profile-shell')?.closest('body') || document;
+    onLinkFieldBlur: function(event){
+      var ps = document.querySelector('form.profile-shell');
+      var root = (ps ? ps.closest('body') : null) || document;
       syncBioToForm(root);
-      const form = (event && event.target && event.target.form) || document.querySelector('form.profile-shell');
-      if (form) form.requestSubmit(); // with novalidate, autosave always posts
+      var form = (event && event.target && event.target.form) || document.querySelector('form.profile-shell');
+      if (form && form.requestSubmit) { form.requestSubmit(); }
+      else if (form) { form.submit(); } // with novalidate, autosave always posts
     },
 
-    addLink(){
-      const form = document.querySelector('form.profile-shell');
-      const info = form && getFormsetInfo(form);
+    addLink: function(){
+      var form = document.querySelector('form.profile-shell');
+      var info = form && getFormsetInfo(form);
       if(!info) return;
 
-      const { totalEl } = info;
-      const idx = parseInt(totalEl.value, 10) || 0;
+      var totalEl = info.totalEl;
+      var idx = parseInt(totalEl.value, 10) || 0;
 
       // Clone template and swap __prefix__
-      const tpl = document.getElementById('empty-form-template');
+      var tpl = document.getElementById('empty-form-template');
       if(!tpl) return;
-      const html = tpl.innerHTML.replace(/__prefix__/g, String(idx));
+      var html = tpl.innerHTML.replace(/__prefix__/g, String(idx));
 
       // Append to container
-      const container = getContainer();
-      const wrapper = document.createElement('div');
+      var container = getContainer();
+      var wrapper = document.createElement('div');
       wrapper.innerHTML = html.trim();
-      const node = wrapper.firstElementChild;
+      var node = wrapper.firstElementChild;
       container.appendChild(node);
 
       // Bump TOTAL_FORMS
       totalEl.value = String(idx + 1);
 
       // Focus first input in the new row
-      const firstInput = node.querySelector('input[type="text"], input:not([type]), textarea');
-      firstInput?.focus();
+      var firstInput = node.querySelector('input[type="text"], input:not([type]), textarea');
+      if (firstInput && firstInput.focus) firstInput.focus();
     },
 
-    deleteLink(e){
-      const card = e?.target?.closest('[data-form-row]');
+    deleteLink: function(e){
+      var target = e && e.target;
+      var card = target && target.closest ? target.closest('[data-form-row]') : null;
       if(!card) return;
 
-      const idInput = card.querySelector('input[name$="-id"]');
-      const del = card.querySelector('input[type="checkbox"][name$="-DELETE"]');
+      var idInput = card.querySelector('input[name$="-id"]');
+      var del = card.querySelector('input[type="checkbox"][name$="-DELETE"]');
 
       // Unsaved newly added row? Just remove it and decrement TOTAL_FORMS.
-      const isUnsaved = idInput && !idInput.value;
+      var isUnsaved = idInput && !idInput.value;
 
       if(isUnsaved){
-        const form = document.querySelector('form.profile-shell');
-        const info = form && getFormsetInfo(form);
+        var form = document.querySelector('form.profile-shell');
+        var info = form && getFormsetInfo(form);
         if(info){
-          const { totalEl } = info;
-          const total = Math.max(0, (parseInt(totalEl.value, 10) || 0) - 1);
+          var totalEl = info.totalEl;
+          var total = Math.max(0, (parseInt(totalEl.value, 10) || 0) - 1);
           totalEl.value = String(total);
         }
-        card.remove();
+        card.parentNode.removeChild(card);
         return;
       }
 
       if(!del) return;
-      if(!confirm('Delete this link?')) return;
+      if(!window.confirm('Delete this link?')) return;
 
       // Mark for deletion and submit WITHOUT HTML5 validation
       del.checked = true;
-      const root = document.querySelector('.profile-shell')?.closest('body') || document;
+      var ps = document.querySelector('.profile-shell');
+      var root = (ps ? ps.closest('body') : null) || document;
       syncBioToForm(root);
-      const form = card.closest('form') || document.querySelector('form.profile-shell');
-      if (form) {
-        form.submit();   // bypass validation so delete always posts
+      var f = card.closest ? card.closest('form') : null;
+      var form2 = f || document.querySelector('form.profile-shell');
+      if (form2) {
+        form2.submit();   // bypass validation so delete always posts
       }
     }
   };
@@ -183,162 +193,182 @@ document.addEventListener('DOMContentLoaded', function(){
 
 /** From: onelink/templates/404.html */
 function gotoHandle() {
-  const v = (document.getElementById('handleLookup').value || '').trim().toLowerCase().replace(/^@/, '');
+  var el = document.getElementById('handleLookup');
+  var v = (el && el.value ? el.value : '').trim().toLowerCase().replace(/^@/, '');
   if (!v) return;
-  window.location.href = `/@${encodeURIComponent(v)}`;
+  window.location.href = '/@' + encodeURIComponent(v);
 }
 
 
 /** From: onelink/templates/base.html */
 (function(){
-  const btn = document.querySelector('.nav-toggle');
-  const nav = document.getElementById('site-nav');
+  var btn = document.querySelector('.nav-toggle');
+  var nav = document.getElementById('site-nav');
   if (!btn || !nav) return;
 
-  btn.addEventListener('click', () => {
-    const isOpen = nav.classList.toggle('open');
+  btn.addEventListener('click', function(){
+    var isOpen = nav.classList.toggle('open');
     btn.setAttribute('aria-expanded', String(isOpen));
   });
 
   // Close on Escape
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', function(e){
     if(e.key === 'Escape' && nav.classList.contains('open')){
       nav.classList.remove('open');
       btn.setAttribute('aria-expanded', 'false');
-      btn.focus();
+      if (btn.focus) btn.focus();
     }
   });
 })();
 
 
 /** From: onelink/templates/base.html */
-window.addEventListener('profile:saved', (e) => {
+window.addEventListener('profile:saved', function(e){
   try {
-    const handle = (e.detail && e.detail.handle || '').trim();
+    var detail = e && e.detail;
+    var handle = (detail && detail.handle ? detail.handle : '').trim();
     if (!handle) return;
 
-    const links = Array.from(document.querySelectorAll('#profile-link, a[data-profile-link]'));
-    if (!links.length) return;
+    var links = document.querySelectorAll('#profile-link, a[data-profile-link]');
+    if (!links || !links.length) return;
 
-    links.forEach((a) => {
-      const oldHref = a.getAttribute('href') || a.href || '';
-      const newHref = oldHref.replace(/\/@[^\/?#]*/i, `/@${handle}`);
-      a.setAttribute('href', newHref === oldHref ? `/@${handle}` : newHref);
-    });
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      var oldHref = a.getAttribute('href') || a.href || '';
+      var newHref = oldHref.replace(/\/@[^\/?#]*/i, '/@' + handle);
+      a.setAttribute('href', newHref === oldHref ? ('/@' + handle) : newHref);
+    }
 
-    const placeholders = Array.from(document.querySelectorAll('[data-profile-handle]'));
-    placeholders.forEach((el) => { el.textContent = handle; });
+    var placeholders = document.querySelectorAll('[data-profile-handle]');
+    for (var j = 0; j < placeholders.length; j++) {
+      placeholders[j].textContent = handle;
+    }
   } catch(err) {
-    console.warn('profile:saved update skipped:', err);
+    try { console.warn('profile:saved update skipped:', err); } catch(_) {}
   }
 });
 
 
 /** From: onelink/templates/components/modal.html */
 (function(){
-  const modal = document.getElementById('generic-modal');
+  var modal = document.getElementById('generic-modal');
   if(!modal) return;
-  const openBtn   = document.querySelector('[data-open-modal]');
-  const cancelBtn = modal.querySelector('[data-cancel-modal]');
-  const backdrop  = modal.querySelector('.modal-backdrop');
+  var openBtn   = document.querySelector('[data-open-modal]');
+  var cancelBtn = modal.querySelector('[data-cancel-modal]');
+  var backdrop  = modal.querySelector('.modal-backdrop');
 
   function openModal(){
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
-    modal.querySelector('[autofocus]')?.focus();
+    var af = modal.querySelector('[autofocus]');
+    if (af && af.focus) af.focus();
   }
   function closeModal(){
     modal.hidden = true;
     document.body.style.overflow = '';
-    openBtn?.focus();
+    if (openBtn && openBtn.focus) openBtn.focus();
   }
 
-  openBtn?.addEventListener('click', openModal);
-  cancelBtn?.addEventListener('click', closeModal);
-  backdrop?.addEventListener('click', closeModal);
-  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && !modal.hidden) closeModal(); });
+  if (openBtn)   openBtn.addEventListener('click', openModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+  if (backdrop)  backdrop.addEventListener('click', closeModal);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !modal.hidden) closeModal(); });
 })();
 
 
 /** From: onelink/templates/profiles/link_list.html */
 // Progressive enhancement: keyboard + drag reorder with CSRF
 (function(){
-  const list = document.getElementById('links'); // legacy ID; safe no-op if absent
+  var list = document.getElementById('links'); // legacy ID; safe no-op if absent
   if(!list) return;
-  const reorderUrl = list.dataset.reorderUrl || '/profiles/links/reorder/';
+  var reorderUrl = list.dataset.reorderUrl || '/profiles/links/reorder/';
 
-  const statusEl = document.getElementById('status');
-  const csrftoken = (document.cookie.match(/csrftoken=([^;]+)/)||[])[1];
+  var statusEl = document.getElementById('status');
+  var match = document.cookie.match(/csrftoken=([^;]+)/);
+  var csrftoken = (match && match[1]) ? match[1] : '';
 
   function announce(t){ if(statusEl){ statusEl.textContent = t; } }
 
-  async function saveOrder(){
-    if(!reorderUrl || reorderUrl.includes("{%")){ return; }
-    const order = Array.from(list.querySelectorAll('.row')).map((li, idx) => ({
-      id: li.dataset.id, position: idx + 1
-    }));
-    try{
-      const res = await fetch(reorderUrl, {
+  function saveOrder(){
+    if(!reorderUrl || /{\%/.test(reorderUrl)) { return; }
+    var rows = list.querySelectorAll('.row');
+    var order = [];
+    for (var i = 0; i < rows.length; i++) {
+      order.push({ id: rows[i].dataset.id, position: i + 1 });
+    }
+    // Use fetch if available; otherwise skip silently
+    if (window.fetch) {
+      fetch(reorderUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-CSRFToken": csrftoken
         },
-        body: JSON.stringify({ order })
+        body: JSON.stringify({ order: order })
+      }).then(function(res){
+        if(!res.ok) throw new Error('Bad status ' + res.status);
+        announce('Saved order.');
+      }).catch(function(err){
+        try { console.error(err); } catch(_) {}
+        announce('Could not save order.');
       });
-      if(!res.ok) throw new Error(`Bad status ${res.status}`);
-      announce('Saved order.');
-    }catch(err){
-      console.error(err);
-      announce('Could not save order.');
     }
   }
 
   function getDragAfterElement(container, y) {
-    const draggableElements = [...container.querySelectorAll('.row:not(.dragging)')];
-    return draggableElements.reduce((closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = y - box.top - box.height / 2;
-      if (offset < 0 && offset > closest.offset) {
-        return { offset, element: child };
-      } else {
-        return closest;
+    var els = container.querySelectorAll('.row:not(.dragging)');
+    var closestOffset = -Infinity;
+    var closestEl = null;
+    for (var i = 0; i < els.length; i++) {
+      var child = els[i];
+      var box = child.getBoundingClientRect();
+      var offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closestOffset) {
+        closestOffset = offset;
+        closestEl = child;
       }
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+    return closestEl;
   }
 
-  list.querySelectorAll('.row').forEach(li => { li.draggable = true; });
+  // Make rows draggable
+  (function(){
+    var rows = list.querySelectorAll('.row');
+    for (var i = 0; i < rows.length; i++) { rows[i].draggable = true; }
+  })();
 
-  list.addEventListener('keydown', e => {
-    const row = e.target.closest('.row');
+  list.addEventListener('keydown', function(e){
+    var row = e.target && e.target.closest ? e.target.closest('.row') : null;
     if(!row) return;
     if(e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')){
       e.preventDefault();
-      const dir = e.key === 'ArrowUp' ? -1 : 1;
-      const sib = dir < 0 ? row.previousElementSibling : row.nextElementSibling;
+      var dir = e.key === 'ArrowUp' ? -1 : 1;
+      var sib = dir < 0 ? row.previousElementSibling : row.nextElementSibling;
       if(sib && sib.classList.contains('row')){
-        (dir < 0 ? row.parentNode.insertBefore(row, sib) : row.parentNode.insertBefore(sib, row));
-        row.focus();
+        if (dir < 0) { row.parentNode.insertBefore(row, sib); }
+        else { row.parentNode.insertBefore(sib, row); }
+        if (row.focus) row.focus();
         announce('Reordered. Saving…');
         saveOrder();
       }
     }
   });
 
-  list.addEventListener('dragstart', e => {
-    e.target.classList.add('dragging');
+  list.addEventListener('dragstart', function(e){
+    if (e.target && e.target.classList) { e.target.classList.add('dragging'); }
   });
 
-  list.addEventListener('dragend', e => {
-    e.target.classList.remove('dragging');
+  list.addEventListener('dragend', function(e){
+    if (e.target && e.target.classList) { e.target.classList.remove('dragging'); }
     announce('Reordered. Saving…');
     saveOrder();
   });
 
-  list.addEventListener('dragover', e => {
+  list.addEventListener('dragover', function(e){
     e.preventDefault();
-    const afterElement = getDragAfterElement(list, e.clientY);
-    const dragging = list.querySelector('.dragging');
+    var afterElement = getDragAfterElement(list, e.clientY);
+    var dragging = list.querySelector('.dragging');
+    if (!dragging) return;
     if (afterElement == null) {
       list.appendChild(dragging);
     } else {
