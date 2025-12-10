@@ -13,7 +13,21 @@
   }
 }
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);margin:0}
+body{
+  background:var(--bg);
+  color:var(--text);
+  margin:0
+  font-family: Montserrat,
+    sans-serif;
+}
+
+h1,
+h2,
+h3 {
+    font-family: Lato,
+        sans-serif;
+    font-weight: 600;
+}
 
 /* ===============================
    A11y helpers
