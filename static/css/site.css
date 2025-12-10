@@ -13,12 +13,12 @@
   }
 }
 html{scroll-behavior:smooth}
+
 body{
   background:var(--bg);
   color:var(--text);
-  margin:0
-  font-family: Montserrat,
-    sans-serif;
+  margin:0;
+  font-family: Montserrat, sans-serif;
 }
 
 h1,
