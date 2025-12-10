@@ -21,7 +21,10 @@ if env_py.exists():
 
 # Quick-start development settings - unsuitable for production
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%=ywu(2m4zl@4xf^fhltvm+1ie@s9j57dg!-s4a78b@8n*jgm4'
+SECRET_KEY = os.environ.get('SECRET_KEY')
+
+if not SECRET_KEY:
+    raise ValueError("No SECRET_KEY found in environment variables")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
