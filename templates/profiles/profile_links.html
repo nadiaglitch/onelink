@@ -3,8 +3,8 @@
 {% block content %}
 <!-- Reusable inline SVG sprite -->
 <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute; width:0; height:0; overflow:hidden;">
-  <symbol id="icon-pencil" viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm2.92 2.33h-.84v-.84l9.02-9.02.84.84-9.02 9.02zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
+  <symbol id="icon-check" viewBox="0 0 24 24" aria-hidden="true">
+   <path d="M20.285 6.709l-11.01 11.01-5.56-5.559 1.414-1.415 4.146 4.146 9.596-9.596z"/>
   </symbol>
 </svg>
 
@@ -28,7 +28,7 @@
     >
     <input type="file" name="profile_image" accept="image/*" @change="previewAvatar">
     <span class="avatar-edit-badge" aria-hidden="true" title="Change avatar">
-      <svg><use href="#icon-pencil"/></svg>
+      <svg><use href="#icon-check"/></svg>
     </span>
   </div>
 
@@ -43,7 +43,7 @@
           value="{{ profile.display_name }}"
           placeholder="Your name"
           @blur="saveProfile" />
-        <svg class="edit-icon" aria-hidden="true"><use href="#icon-pencil"/></svg>
+        <svg class="edit-icon" aria-hidden="true"><use href="#icon-check"/></svg>
       </span>
     </h1>
   </div>
@@ -61,7 +61,7 @@
         inputmode="latin" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="15"
         @input="onHandleInput($event)"
         @blur="saveProfile" />
-      <svg class="edit-icon" aria-hidden="true"><use href="#icon-pencil"/></svg>
+      <svg class="edit-icon" aria-hidden="true"><use href="#icon-check"/></svg>
     </div>
     <p x-text="errors.handle" x-show="errors.handle" class="text-red-500 text-sm text-center mt-1" aria-live="polite"></p>
   </div>
@@ -85,7 +85,7 @@
       <!-- Hidden field that actually submits to Django -->
       <textarea name="bio" x-ref="bioField" class="hidden" aria-hidden="true"></textarea>
 
-      <svg class="edit-icon" aria-hidden="true"><use href="#icon-pencil"/></svg>
+      <svg class="edit-icon" aria-hidden="true"><use href="#icon-check"/></svg>
     </div>
   </div>
 
@@ -129,18 +129,22 @@
                 type="button"
                 class="icon-btn"
                 title="Delete"
-                @click="deleteLink($event)"
+                data-link-row-action="delete"
               >
                 <span>Delete</span>
               </button>
             {% else %}
+
               <!-- Blank/unsaved row -> show Add link -->
               <button
                 type="button"
                 class="icon-btn"
                 title="Add link"
-                @click="addLink()"
-              > +  Add</button>
+                data-link-row-action="add"
+              >
+                + Add
+              </button>
+
             {% endif %}
           </div>
         </div>
@@ -174,7 +178,7 @@
             type="button"
             class="icon-btn"
             title="Add link"
-            @click="addLink()"
+            data-link-row-action="add"
           >Add link</button>
         </div>
       </div>
