@@ -91,7 +91,7 @@
         <span class="dot" aria-hidden="true"></span>
         <span class="label">
           {% if request.user.is_authenticated %}
-            Logged in
+            @{{ request.user.profile.handle }} logged on
           {% else %}
             Logged out
           {% endif %}
