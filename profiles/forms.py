@@ -1,22 +1,30 @@
 from django import forms
 from django.core.validators import RegexValidator
+
 from .models import Profile, Link
+
 
 handle_validator = RegexValidator(
     regex=r"^[a-z0-9_]{5,15}$",
-    message="Handle must be 5–15 chars, lowercase letters, numbers, or underscore."
+    message=(
+        "Handle must be 5–15 characters and contain only lowercase "
+        "letters, numbers, or underscores."
+    ),
 )
+
 
 class ProfileForm(forms.ModelForm):
     handle = forms.CharField(
         max_length=15,
         validators=[handle_validator],
-        widget=forms.TextInput(attrs={
-            "autocomplete": "off",
-            "autocapitalize": "none",
-            "spellcheck": "false",
-            "maxlength": "15",
-        }),
+        widget=forms.TextInput(
+            attrs={
+                "autocomplete": "off",
+                "autocapitalize": "none",
+                "spellcheck": "false",
+                "maxlength": "15",
+            }
+        ),
     )
 
     class Meta:
@@ -32,12 +40,16 @@ class LinkForm(forms.ModelForm):
         model = Link
         fields = ["title", "url"]
         widgets = {
-            "title": forms.TextInput(attrs={
-                "class": "editable-text link-title",
-                "placeholder": "Display title",
-            }),
-            "url": forms.URLInput(attrs={
-                "class": "editable-text link-url",
-                "placeholder": "https://example.com",
-            }),
+            "title": forms.TextInput(
+                attrs={
+                    "class": "editable-text link-title",
+                    "placeholder": "Display title",
+                }
+            ),
+            "url": forms.URLInput(
+                attrs={
+                    "class": "editable-text link-url",
+                    "placeholder": "https://example.com",
+                }
+            ),
         }
